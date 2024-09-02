@@ -75,11 +75,11 @@ jobs:
             fi
 
             # Buat file .env
-            export "OPENAI_API_KEY=${OPENAI_API_KEY}" > $PROJECT_DIR/.env
-            export "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $PROJECT_DIR/.env
+            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > $PROJECT_DIR/.env
+            echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $PROJECT_DIR/.env
 
             # Hentikan aplikasi FastAPI yang sedang berjalan
-            PIDS=$(ps aux | grep "uvicorn" | grep -v grep | awk '{print $2}')
+            PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
             if [ -n "$PIDS" ]; then
               echo "Menghentikan aplikasi dengan PID: $PIDS"
               kill -9 $PIDS
@@ -88,7 +88,7 @@ jobs:
             fi
 
             # Jalankan aplikasi FastAPI
-            sudo nohup uvicorn main:app --host=0.0.0.0 --port=1014 --reload > output.log 2>&1 &
+            sudo nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
 
             echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
           EOF
