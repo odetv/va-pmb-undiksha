@@ -9,14 +9,22 @@ if [ ! -d "$PROJECT_DIR" ]; then
   echo "Direktori proyek tidak ditemukan. Membuat direktori dan meng-clone repositori..."
   mkdir -p $PROJECT_DIR
   cd $PROJECT_DIR
-  git clone https://github.com/username/repository.git .
+  git clone https://github.com/odetv/chatbot-pmb-undiksha.git .
 else
   echo "Direktori proyek ditemukan. Memasuki direktori..."
   cd $PROJECT_DIR || { echo "Gagal masuk ke direktori proyek!"; exit 1; }
 fi
 
-# Tarik pembaruan terbaru dari repositori Git
-git pull origin main
+# Cek apakah direktori Git ada
+if [ ! -d ".git" ]; then
+  echo "Direktori bukan git repository. Melakukan git clone..."
+  git init
+  git remote add origin https://github.com/odetv/chatbot-pmb-undiksha.git
+  git pull origin main
+else
+  echo "Git repository ditemukan. Menarik pembaruan terbaru..."
+  git pull origin main
+fi
 
 # Cek apakah virtual environment ada, jika tidak, buat yang baru
 if [ ! -d "$VENV_DIR" ]; then
@@ -27,6 +35,15 @@ fi
 # Aktifkan virtual environment
 source $VENV_DIR/bin/activate
 
+# Install dependencies dari requirements.txt
+if [ -f "requirements.txt" ]; then
+  echo "Meninstall dependencies dari requirements.txt..."
+  pip install -r requirements.txt
+else
+  echo "File requirements.txt tidak ditemukan!"
+  exit 1
+fi
+
 # Hentikan aplikasi FastAPI yang sedang berjalan
 PIDS=$(ps aux | grep "uvicorn main:app --port=1014" | grep -v grep | awk '{print $2}')
 if [ -n "$PIDS" ]; then
@@ -35,9 +52,6 @@ if [ -n "$PIDS" ]; then
 else
   echo "Tidak ada aplikasi yang berjalan."
 fi
-
-# Install atau update dependencies
-pip install --no-cache-dir -r requirements.txt
 
 # Jalankan aplikasi FastAPI menggunakan uvicorn
 nohup uvicorn main:app --host 0.0.0.0 --port 1014 > output.log 2>&1 &
