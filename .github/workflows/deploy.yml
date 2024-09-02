@@ -29,10 +29,10 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-          cd /home/bot/chatbot-pmb-undiksha
-          pip install virtualenv
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-          docker-compose down
-          docker-compose up --build -d
+            cd /home/bot/chatbot-pmb-undiksha
+            pip install virtualenv
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+            docker-compose down
+            docker-compose up --build -d
