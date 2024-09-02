@@ -20,11 +20,23 @@ jobs:
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
           sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
-            mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
-            cd /home/$VPS_USER/project/chatbot-pmb-undiksha || git clone https://github.com/odetv/chatbot-pmb-undiksha.git /home/$VPS_USER/project/chatbot-pmb-undiksha
-            git pull origin main
-            source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
+            # Buat direktori jika tidak ada
+            sudo mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
+            sudo chown -R $VPS_USER:$VPS_USER /home/$VPS_USER/project/chatbot-pmb-undiksha
+            cd /home/$VPS_USER/project/chatbot-pmb-undiksha
+            # Jika ini adalah repositori git, update kode, jika tidak clone
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://github.com/odetv/chatbot-pmb-undiksha.git .
+            fi
+            # Buat virtual environment dan install dependensi jika belum ada
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            source venv/bin/activate
             pip install --no-cache-dir -r requirements.txt
+            # Restart FastAPI server
             pkill -f 'uvicorn main:app' || true
             nohup uvicorn main:app --host 0.0.0.0 --port 1014 &
           EOF
