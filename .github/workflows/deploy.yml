@@ -26,7 +26,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CHATBOT_API_KEY: ${{ secrets.CHATBOT_API_KEY }}
         run: |
-          sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" << 'EOF'
+          sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" << EOF
             #!/bin/bash
 
             # Variabel direktori proyek
@@ -73,16 +73,15 @@ jobs:
               exit 1
             fi
 
-            # Salin file .env ke direktori proyek
-            echo "Menyalin file .env..."
-            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > $PROJECT_DIR/.env
-            echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $PROJECT_DIR/.env
+            # Buat file .env dengan variabel dari GitHub Secrets
+            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > .env
+            echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> .env
 
             # Hentikan aplikasi FastAPI yang sedang berjalan
-            PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
-            if [ -n "$PIDS" ]; then
-              echo "Menghentikan aplikasi dengan PID: $PIDS"
-              kill -9 $PIDS
+            PIDS=\$(ps aux | grep "uvicorn" | grep -v grep | awk '{print \$2}')
+            if [ -n "\$PIDS" ]; then
+              echo "Menghentikan aplikasi dengan PID: \$PIDS"
+              kill -9 \$PIDS
             else
               echo "Tidak ada aplikasi yang berjalan."
             fi
