@@ -19,24 +19,38 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
+          # Menggunakan sshpass untuk menyalin kode ke VPS
           sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
-            # Buat direktori jika tidak ada
-            sudo mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
-            sudo chown -R $VPS_USER:$VPS_USER /home/$VPS_USER/project/chatbot-pmb-undiksha
-            cd /home/$VPS_USER/project/chatbot-pmb-undiksha
-            # Jika ini adalah repositori git, update kode, jika tidak clone
-            if [ -d ".git" ]; then
-              git pull origin main
-            else
-              git clone https://github.com/odetv/chatbot-pmb-undiksha.git .
-            fi
-            # Buat virtual environment dan install dependensi jika belum ada
-            if [ ! -d "venv" ]; then
+            # Masuk sebagai root untuk melakukan setup
+            echo $VPS_PASSWORD | sudo -S bash << 'SUDO'
+              # Buat direktori jika tidak ada
+              mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
+              chown -R $VPS_USER:$VPS_USER /home/$VPS_USER/project/chatbot-pmb-undiksha
+            SUDO
+          EOF
+
+          # Salin file dari GitHub ke VPS
+          sshpass -p $VPS_PASSWORD scp -r -o StrictHostKeyChecking=no ./* $VPS_USER@$VPS_HOST:/home/$VPS_USER/project/chatbot-pmb-undiksha/
+
+      - name: Restart FastAPI server on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          # Menggunakan sshpass untuk menjalankan perintah di VPS
+          sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
+            # Masuk sebagai root untuk menjalankan perintah
+            echo $VPS_PASSWORD | sudo -S bash << 'SUDO'
+              # Masuk ke direktori proyek
+              cd /home/$VPS_USER/project/chatbot-pmb-undiksha
+              # Setup virtual environment dan install dependencies
               python3 -m venv venv
-            fi
-            source venv/bin/activate
-            pip install --no-cache-dir -r requirements.txt
-            # Restart FastAPI server
-            pkill -f 'uvicorn main:app' || true
-            nohup uvicorn main:app --host 0.0.0.0 --port 1014 &
+              source venv/bin/activate
+              pip install --no-cache-dir -r requirements.txt
+              # Hentikan proses lama
+              pkill -f 'uvicorn main:app' || true
+              # Jalankan aplikasi FastAPI di background
+              nohup uvicorn main:app --host 0.0.0.0 --port 1014 &
+            SUDO
           EOF
