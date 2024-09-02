@@ -1,0 +1,43 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Docker image
+        run: docker build -t chatbot-pmb-undiksha:latest .
+
+      - name: Save Docker image to tar
+        run: docker save chatbot-pmb-undiksha:latest -o chatbot-pmb-undiksha.tar
+
+      - name: Copy Docker image and code to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sshpass -p $VPS_PASSWORD scp -o StrictHostKeyChecking=no chatbot-pmb-undiksha.tar $VPS_USER@$VPS_HOST:/home/$VPS_USER/
+          sshpass -p $VPS_PASSWORD scp -r -o StrictHostKeyChecking=no ./* $VPS_USER@$VPS_HOST:/home/$VPS_USER/project/
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
+            cd /home/$VPS_USER/project/
+            sudo docker stop chatbot-pmb-undiksha-container || true
+            sudo docker rm chatbot-pmb-undiksha-container || true
+            sudo docker load -i /home/$VPS_USER/chatbot-pmb-undiksha.tar
+            sudo docker run -d --name chatbot-pmb-undiksha-container -p 1014:1014 chatbot-pmb-undiksha:latest
+          EOF
