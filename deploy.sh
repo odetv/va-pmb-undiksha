@@ -54,6 +54,6 @@ else
 fi
 
 # Jalankan aplikasi FastAPI menggunakan uvicorn
-nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
+sudo nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
 
 echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
