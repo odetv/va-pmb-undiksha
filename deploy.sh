@@ -1,13 +1,19 @@
-#!/bin/bash
+PROJECT_DIR=~/home/bot/project/chatbot-pmb-undiksha
 
-# Update dari GitHub
+cd $PROJECT_DIR
+
 git pull origin main
 
-# Setup environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt --no-cache-dir --default-timeout=1000
+echo "Sedang berada di direktori: $(pwd)"
 
-# Jalankan Docker dengan sudo
-sudo docker-compose down
-sudo docker-compose up --build -d
+PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
+if [ -n "$PIDS" ]; then
+  echo "Menghentikan aplikasi dengan PID: $PIDS"
+  kill -9 $PIDS
+else
+  echo "Tidak ada aplikasi yang berjalan."
+fi
+
+nohup ~/venv/bin/python main.py > output.log 2>&1 &
+
+echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."

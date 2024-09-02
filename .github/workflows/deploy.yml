@@ -14,28 +14,14 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Copy files to VPS
-        env:
-          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
-          sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "mkdir -p /home/bot/chatbot-pmb-undiksha"
-          sshpass -p $SSH_PASS scp -o StrictHostKeyChecking=no -r ./* $VPS_USER@$VPS_HOST:/home/bot/chatbot-pmb-undiksha/
+          sudo apt-get update -y
+          sudo apt-get install -y sshpass
 
-      - name: Ensure Docker permissions on VPS
+      - name: Deploy to VPS
         env:
-          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
-          VPS_USER: ${{ secrets.VPS_USER }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
-          sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "sudo usermod -aG docker $VPS_USER && sudo chmod 666 /var/run/docker.sock"
-
-      - name: Run deploy script on VPS
-        env:
-          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST 'bash /home/bot/chatbot-pmb-undiksha/deploy.sh'
+          sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}"@"${VPS_HOST}" 'bash -s' < deploy.sh
