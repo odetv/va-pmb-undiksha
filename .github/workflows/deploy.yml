@@ -14,12 +14,12 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-venv
-        sudo apt-get install -y curl
-        curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-venv
+          sudo apt-get install -y curl
+          curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
 
       - name: Copy files via SCP with password
         uses: appleboy/scp-action@v0.1.3
