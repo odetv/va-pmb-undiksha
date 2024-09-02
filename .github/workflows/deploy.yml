@@ -33,18 +33,15 @@ jobs:
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
           sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" << 'EOF'
-            # Pindah ke direktori proyek
-            PROJECT_DIR=~/project/chatbot-pmb-undiksha
-            cd $PROJECT_DIR || exit
-
-            # Cek apakah virtual environment sudah ada, jika tidak buat baru
-            if [ ! -d "venv" ]; then
-              echo "Membuat virtual environment di $PROJECT_DIR/venv"
-              python3 -m venv venv
-            fi
+            # Pastikan direktori proyek ada dan masuk ke sana
+            cd /home/bot/chatbot-pmb-undiksha || exit
 
             # Aktifkan virtual environment
             echo "Mengaktifkan virtual environment"
+            if [ ! -d "venv" ]; then
+              echo "Membuat virtual environment di $(pwd)/venv"
+              python3 -m venv venv
+            fi
             source venv/bin/activate
 
             # Instal dependensi dari requirements.txt
