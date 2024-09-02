@@ -13,9 +13,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install SSH pass
+        run: sudo apt-get install -y sshpass
+
       - name: Sync source files to VPS via Rsync
         run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete --exclude 'venv' -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete --exclude 'venv' --exclude '.git' --exclude '.github' -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
         env:
           SSH_PASS: ${{ secrets.VPS_PASSWORD }}
 
@@ -29,9 +32,9 @@ jobs:
             cd /home/bot/chatbot-pmb-undiksha
             python3 -m venv venv
             source venv/bin/activate
-            pip install -r requirements.txt
+            pip install -r requirements.txt --no-cache-dir --default-timeout=1000
             docker-compose down
             docker-compose up --build -d
-          timeout: "180s"
-          command_timeout: "180s"
+          timeout: "360s"
+          command_timeout: "360s"
           debug: true
