@@ -27,3 +27,5 @@ jobs:
           CHATBOT_API_KEY: ${{ secrets.CHATBOT_API_KEY }}
         run: |
           sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}"@"${VPS_HOST}" 'bash -s' < deploy.sh
+          echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > ~/project/chatbot-pmb-undiksha/.env
+          echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> ~/project/chatbot-pmb-undiksha/.env

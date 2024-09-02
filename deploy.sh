@@ -44,9 +44,15 @@ else
   exit 1
 fi
 
-# Menulis file .env
-echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > .env
-echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> .env
+# Buat file .env jika belum ada
+ENV_FILE="$PROJECT_DIR/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Membuat file .env..."
+  echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > $ENV_FILE
+  echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $ENV_FILE
+else
+  echo "File .env sudah ada."
+fi
 
 # Hentikan aplikasi FastAPI yang sedang berjalan
 PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
