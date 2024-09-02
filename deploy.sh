@@ -3,7 +3,6 @@
 # Variabel direktori proyek
 PROJECT_DIR=~/project/chatbot-pmb-undiksha
 VENV_DIR=$PROJECT_DIR/venv
-PORT=1014
 
 # Cek apakah direktori proyek ada
 if [ ! -d "$PROJECT_DIR" ]; then
@@ -37,7 +36,7 @@ fi
 source $VENV_DIR/bin/activate
 
 # Hentikan aplikasi FastAPI yang sedang berjalan
-PIDS=$(ps aux | grep "uvicorn main:app --port=$PORT" | grep -v grep | awk '{print $2}')
+PIDS=$(ps aux | grep "uvicorn main:app --port=1014" | grep -v grep | awk '{print $2}')
 if [ -n "$PIDS" ]; then
   echo "Menghentikan aplikasi dengan PID: $PIDS"
   sudo kill -9 $PIDS
@@ -46,4 +45,6 @@ else
 fi
 
 # Jalankan aplikasi FastAPI menggunakan uvicorn dengan hak akses root
-sudo nohup uvicorn main:app --host 0.0.0.0 --port $PORT > output.log 2>&1 &
+nohup sudo uvicorn main:app --host 0.0.0.0 --port 1014 > output.log 2>&1 &
+
+echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
