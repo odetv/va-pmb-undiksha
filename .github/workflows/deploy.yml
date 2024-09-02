@@ -13,36 +13,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install SSH pass
+      - name: Install sshpass
         run: sudo apt-get install -y sshpass
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Sync source files to VPS via Rsync
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete --exclude 'venv' --exclude '.git' --exclude '.github' -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
+      - name: Copy files to VPS
         env:
           SSH_PASS: ${{ secrets.VPS_PASSWORD }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: sshpass -p $SSH_PASS scp -o StrictHostKeyChecking=no -r ./* $VPS_USER@$VPS_HOST:/home/bot/chatbot-pmb-undiksha/
 
-      - name: Execute remote SSH commands with password
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          script: |
-            cd /home/bot/chatbot-pmb-undiksha
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt --no-cache-dir --default-timeout=1000
-            docker-compose down
-            docker-compose up --build -d
-          timeout: "720s"
-          command_timeout: "720s"
-          debug: true
+      - name: Run deploy script on VPS
+        env:
+          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST 'bash /home/bot/chatbot-pmb-undiksha/deploy.sh'
