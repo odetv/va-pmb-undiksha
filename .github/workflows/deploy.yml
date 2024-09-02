@@ -18,10 +18,56 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y sshpass
 
+      - name: Sync source code to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sshpass -p "${VPS_PASSWORD}" rsync -avz --delete --exclude '.git' --exclude '.github' -e "ssh -o StrictHostKeyChecking=no" ./ "${VPS_USER}@${VPS_HOST}:/home/bot/chatbot-pmb-undiksha/"
+
       - name: Deploy to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
-          sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}"@"${VPS_HOST}" 'bash -s' < deploy.sh
+          sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" << 'EOF'
+            # Pindah ke direktori proyek
+            PROJECT_DIR=~/project/chatbot-pmb-undiksha
+            cd $PROJECT_DIR || exit
+
+            # Cek apakah virtual environment sudah ada, jika tidak buat baru
+            if [ ! -d "venv" ]; then
+              echo "Membuat virtual environment di $PROJECT_DIR/venv"
+              python3 -m venv venv
+            fi
+
+            # Aktifkan virtual environment
+            echo "Mengaktifkan virtual environment"
+            source venv/bin/activate
+
+            # Instal dependensi dari requirements.txt
+            if [ -f "requirements.txt" ]; then
+              echo "Menginstal dependensi dari requirements.txt"
+              pip install --no-cache-dir -r requirements.txt
+            else
+              echo "requirements.txt tidak ditemukan!"
+              exit 1
+            fi
+
+            # Hentikan aplikasi yang sedang berjalan
+            PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
+            if [ -n "$PIDS" ]; then
+              echo "Menghentikan aplikasi dengan PID: $PIDS"
+              kill -9 $PIDS
+            else
+              echo "Tidak ada aplikasi yang berjalan."
+            fi
+
+            # Jalankan aplikasi menggunakan nohup
+            echo "Menjalankan aplikasi..."
+            nohup python main.py > output.log 2>&1 &
+
+            echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
+          EOF
