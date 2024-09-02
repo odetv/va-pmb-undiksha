@@ -7,10 +7,12 @@ python-dotenv
 langchain
 langchain-community
 langchain-openai
+langchain_chroma
 tiktoken
 chromadb
 pytest
 pypdf
+pdfplumber
 openai
 fastapi
 uvicorn
