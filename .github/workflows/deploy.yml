@@ -88,7 +88,7 @@ jobs:
             fi
 
             # Jalankan aplikasi FastAPI
-            sudo nohup uvicorn main:app --host=0.0.0.0 --port=1014 > output.log 2>&1 &
+            sudo nohup uvicorn main:app --host=0.0.0.0 --port=1014 --reload > output.log 2>&1 &
 
             echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
           EOF
