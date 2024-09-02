@@ -1,1 +1,1 @@
-{"chunk_size": 700, "chunk_overlap": 50, "model_embedding": "text-embedding-ada-002"}
+{"chunk_size": 500, "chunk_overlap": 50, "model_embedding": "bge-m3"}

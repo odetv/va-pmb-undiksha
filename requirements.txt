@@ -1,3 +1,8 @@
+# pip install virtualenv
+# python -m venv venv
+# venv/Scripts/activate         # On Windows
+# source myvenv/bin/activate    # On macOS/Linux
+
 python-dotenv
 langchain
 langchain-community

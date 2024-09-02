@@ -34,11 +34,11 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
     
 
 # Variabel konfigurasi untuk membangun RAG
-MODEL_EMBEDDING = "text-embedding-ada-002"                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "mxbai-embed-large"
-EMBEDDER=OpenAIEmbeddings(model=MODEL_EMBEDDING)                                # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
-MODEL_LLM = "llama3.1"                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
-RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM) # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)""
-CHUNK_SIZE = 700
+MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3"
+EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)   # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
+MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
+RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)""
+CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
