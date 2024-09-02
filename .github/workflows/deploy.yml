@@ -33,7 +33,7 @@ jobs:
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
           sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" << 'EOF'
-            # Pastikan direktori proyek ada dan masuk ke sana
+            # Pindah ke direktori proyek
             cd /home/bot/chatbot-pmb-undiksha || exit
 
             # Aktifkan virtual environment
@@ -47,7 +47,7 @@ jobs:
             # Instal dependensi dari requirements.txt
             if [ -f "requirements.txt" ]; then
               echo "Menginstal dependensi dari requirements.txt"
-              pip install --no-cache-dir -r requirements.txt
+              pip install -r requirements.txt --timeout=1000
             else
               echo "requirements.txt tidak ditemukan!"
               exit 1
