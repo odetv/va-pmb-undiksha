@@ -13,22 +13,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install dependencies
+      - name: Sync source files to VPS via Rsync
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass
-          sudo apt-get install -y python3-venv rsync
-          sudo apt-get install -y curl
-          curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-        timeout-minutes: 10
-
-      - name: Sync files to VPS via Rsync
-        run: |
-          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete --exclude 'venv' -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
         env:
           SSH_PASS: ${{ secrets.VPS_PASSWORD }}
 
@@ -40,6 +27,9 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd /home/bot/chatbot-pmb-undiksha
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
             docker-compose down
             docker-compose up --build -d
           timeout: "180s"
