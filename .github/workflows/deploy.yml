@@ -25,8 +25,8 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
-          sshpass -p $VPS_PASSWORD scp -o StrictHostKeyChecking=no chatbot-pmb-undiksha.tar $VPS_USER@$VPS_HOST:/home/$VPS_USER/
-          sshpass -p $VPS_PASSWORD scp -r -o StrictHostKeyChecking=no ./* $VPS_USER@$VPS_HOST:/home/$VPS_USER/project/
+          sshpass -p $VPS_PASSWORD rsync -avz -e "ssh -o StrictHostKeyChecking=no" chatbot-pmb-undiksha.tar $VPS_USER@$VPS_HOST:/home/$VPS_USER/
+          sshpass -p $VPS_PASSWORD rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./* $VPS_USER@$VPS_HOST:/home/$VPS_USER/project/
 
       - name: Deploy to VPS
         env:
