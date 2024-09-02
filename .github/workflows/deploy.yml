@@ -24,5 +24,6 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
+          echo "Starting deployment..."
           sshpass -p "${VPS_PASSWORD}" ssh -o StrictHostKeyChecking=no "${VPS_USER}@${VPS_HOST}" \
-          'echo "${VPS_PASSWORD}" | sudo -S bash -s' < deploy.sh
+          "echo '${VPS_PASSWORD}' | sudo -S bash -s" < deploy.sh
