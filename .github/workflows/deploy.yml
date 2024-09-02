@@ -21,7 +21,17 @@ jobs:
           SSH_PASS: ${{ secrets.VPS_PASSWORD }}
           VPS_USER: ${{ secrets.VPS_USER }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: sshpass -p $SSH_PASS scp -o StrictHostKeyChecking=no -r ./* $VPS_USER@$VPS_HOST:/home/bot/chatbot-pmb-undiksha/
+        run: |
+          sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "mkdir -p /home/bot/chatbot-pmb-undiksha"
+          sshpass -p $SSH_PASS scp -o StrictHostKeyChecking=no -r ./* $VPS_USER@$VPS_HOST:/home/bot/chatbot-pmb-undiksha/
+
+      - name: Ensure Docker permissions on VPS
+        env:
+          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          sshpass -p $SSH_PASS ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST "sudo usermod -aG docker $VPS_USER && sudo chmod 666 /var/run/docker.sock"
 
       - name: Run deploy script on VPS
         env:

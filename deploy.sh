@@ -1,17 +1,13 @@
 #!/bin/bash
 
-# Navigate to project directory
-cd /home/bot/chatbot-pmb-undiksha
-
-# Pull the latest code from GitHub (redundant here since code is already copied)
+# Update dari GitHub
 git pull origin main
 
-# Build the Docker image
-docker build -t chatbot-pmb-undiksha .
+# Setup environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt --no-cache-dir --default-timeout=1000
 
-# Stop and remove the old container if it exists
-docker stop chatbot-pmb-undiksha || true
-docker rm chatbot-pmb-undiksha || true
-
-# Run the new container in detached mode
-docker run -d --name chatbot-pmb-undiksha -p 1014:1014 chatbot-pmb-undiksha
+# Jalankan Docker dengan sudo
+sudo docker-compose down
+sudo docker-compose up --build -d
