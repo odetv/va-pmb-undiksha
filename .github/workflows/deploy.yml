@@ -61,6 +61,10 @@ jobs:
               python3 -m venv $VENV_DIR
             fi
 
+            # Set variabel lingkungan
+            export OPENAI_API_KEY=${OPENAI_API_KEY}
+            export CHATBOT_API_KEY=${CHATBOT_API_KEY}
+
             # Aktifkan virtual environment
             source $VENV_DIR/bin/activate
 
