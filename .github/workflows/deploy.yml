@@ -20,25 +20,11 @@ jobs:
           VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
         run: |
           sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
-            sudo mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
-            sudo chown -R $VPS_USER:$VPS_USER /home/$VPS_USER/project/chatbot-pmb-undiksha
-            cd /home/$VPS_USER/project/chatbot-pmb-undiksha
-            git pull origin main || git clone https://github.com/odetv/chatbot-pmb-undiksha.git .
-          EOF
-          sshpass -p $VPS_PASSWORD scp -r -o StrictHostKeyChecking=no ./* $VPS_USER@$VPS_HOST:/home/$VPS_USER/project/chatbot-pmb-undiksha/
-
-      - name: Restart FastAPI server on VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
-        run: |
-          sshpass -p $VPS_PASSWORD ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
-            sudo -i << 'SUDO'
-              cd /home/$VPS_USER/project/chatbot-pmb-undiksha/
-              source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
-              pip install --no-cache-dir -r requirements.txt
-              pkill -f 'uvicorn main:app' || true
-              nohup uvicorn main:app --host 0.0.0.0 --port 1014 &
-            SUDO
+            mkdir -p /home/$VPS_USER/project/chatbot-pmb-undiksha
+            cd /home/$VPS_USER/project/chatbot-pmb-undiksha || git clone https://github.com/odetv/chatbot-pmb-undiksha.git /home/$VPS_USER/project/chatbot-pmb-undiksha
+            git pull origin main
+            source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
+            pip install --no-cache-dir -r requirements.txt
+            pkill -f 'uvicorn main:app' || true
+            nohup uvicorn main:app --host 0.0.0.0 --port 1014 &
           EOF
