@@ -16,6 +16,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
+          sudo apt-get install -y sshpass
           sudo apt-get install -y python3-venv rsync
           sudo apt-get install -y curl
           curl -L "https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -27,8 +28,9 @@ jobs:
 
       - name: Sync files to VPS via Rsync
         run: |
-          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
-        timeout-minutes: 10
+          sshpass -p "${{ secrets.VPS_PASSWORD }}" rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" . ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/bot/chatbot-pmb-undiksha
+        env:
+          SSH_PASS: ${{ secrets.VPS_PASSWORD }}
 
       - name: Execute remote SSH commands with password
         uses: appleboy/ssh-action@master
