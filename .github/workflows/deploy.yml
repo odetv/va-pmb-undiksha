@@ -33,6 +33,9 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           source: "."
           target: "/home/bot/chatbot-pmb-undiksha"
+          timeout: "180s" # Menambahkan timeout lebih panjang
+          command_timeout: "180s" # Menambahkan timeout untuk perintah
+          debug: true # Menambahkan output debugging
 
       - name: Execute remote SSH commands with password
         uses: appleboy/ssh-action@master
@@ -44,3 +47,6 @@ jobs:
             cd /home/bot/chatbot-pmb-undiksha
             docker-compose down
             docker-compose up --build -d
+          timeout: "180s" # Menambahkan timeout lebih panjang
+          command_timeout: "180s" # Menambahkan timeout untuk perintah
+          debug: true # Menambahkan output debugging
