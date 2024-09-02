@@ -35,16 +35,25 @@ fi
 # Aktifkan virtual environment
 source $VENV_DIR/bin/activate
 
+# Install dependencies dari requirements.txt
+if [ -f "requirements.txt" ]; then
+  echo "Meninstall dependencies dari requirements.txt..."
+  pip install -r requirements.txt
+else
+  echo "File requirements.txt tidak ditemukan!"
+  exit 1
+fi
+
 # Hentikan aplikasi FastAPI yang sedang berjalan
-PIDS=$(ps aux | grep "uvicorn main:app --port=1014" | grep -v grep | awk '{print $2}')
+PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
 if [ -n "$PIDS" ]; then
   echo "Menghentikan aplikasi dengan PID: $PIDS"
-  sudo kill -9 $PIDS
+  kill -9 $PIDS
 else
   echo "Tidak ada aplikasi yang berjalan."
 fi
 
-# Jalankan aplikasi FastAPI menggunakan uvicorn dengan hak akses root
-nohup sudo uvicorn main:app --host 0.0.0.0 --port 1014 > output.log 2>&1 &
+# Jalankan aplikasi FastAPI menggunakan uvicorn
+nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
 
 echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
