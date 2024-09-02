@@ -61,10 +61,6 @@ jobs:
               python3 -m venv $VENV_DIR
             fi
 
-            # Set variabel lingkungan
-            export OPENAI_API_KEY=${OPENAI_API_KEY}
-            export CHATBOT_API_KEY=${CHATBOT_API_KEY}
-
             # Aktifkan virtual environment
             source $VENV_DIR/bin/activate
 
@@ -77,7 +73,8 @@ jobs:
               exit 1
             fi
 
-            # Set up environment variables
+            # Salin file .env ke direktori proyek
+            echo "Menyalin file .env..."
             echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > $PROJECT_DIR/.env
             echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $PROJECT_DIR/.env
 
@@ -90,7 +87,8 @@ jobs:
               echo "Tidak ada aplikasi yang berjalan."
             fi
 
-            # Jalankan aplikasi FastAPI
+            # Jalankan aplikasi FastAPI dengan uvicorn
             sudo nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
+            
             echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
           EOF
