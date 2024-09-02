@@ -74,10 +74,6 @@ jobs:
               exit 1
             fi
 
-            # Buat file .env
-            echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > $PROJECT_DIR/.env
-            echo "CHATBOT_API_KEY=${CHATBOT_API_KEY}" >> $PROJECT_DIR/.env
-
             # Hentikan aplikasi FastAPI yang sedang berjalan
             PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
             if [ -n "$PIDS" ]; then
