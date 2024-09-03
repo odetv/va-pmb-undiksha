@@ -244,7 +244,7 @@ async def startup_event():
 # Endpoint GET untuk memberikan informasi dasar tentang API
 @app.get("/")
 async def root():
-    return {"message": "API Chatbot PMB Undiksha", "hint": "Diperlukan API Key untuk mengakses API ini!", "lastupdate":"2024-09-03 21:02:55"}
+    return {"message": "API Chatbot PMB Undiksha", "hint": "Diperlukan API Key untuk mengakses API ini!", "lastupdate":"2024-09-03 23:10:46"}
 
 # Endpoint POST untuk melakukan query terhadap model RAG
 @app.post("/chat", response_model=QuestionResponse, dependencies=[Depends(verify_api_key)])
