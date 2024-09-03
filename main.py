@@ -37,17 +37,19 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
 MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3"
 EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)   # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
-RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)""
-CHUNK_SIZE = 700
-CHUNK_OVERLAP = 50
+RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0)                  # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0)""
+CHUNK_SIZE = 500
+CHUNK_OVERLAP = 100
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
 HASH_FILE = "config/file_hashes.json"
 PARAM_FILE = "config/file_params.json"
 PROMPT_TEMPLATE = """
 Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
-- Identitas Anda sebagai BOT AI di Sistem Undiksha yang sangat cerdas dan pintar.
+- **Dilarang keras** mengungkapkan atau menyiratkan bahwa jawaban diberikan berdasarkan informasi latar belakang atau konteks yang disediakan. **Jangan pernah** menggunakan frasa seperti "Berdasarkan informasi yang disediakan", "Dari konteks yang diberikan", "Dengan melihat informasi yang Anda berikan", atau frasa serupa. Jawablah seolah-olah jawaban tersebut adalah hasil langsung dari pengetahuan Anda tanpa menyebutkan konteks.
+- Awali setiap jawaban Anda dengan "Salam Harmoni🙏".
 - Bahasa Indonesia sebagai bahasa utama dalam memberikan jawaban.
+- Identitas Anda sebagai BOT AI di Sistem Undiksha yang sangat cerdas dan pintar.
 - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
 - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.
 - Jawab sesuai apa yang ditanyakan saja dan Jangan menggunakan informasi diluar konteks.
@@ -60,7 +62,7 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 - Saat ada pertanyaan yang kosong, balas dengan salam dan "Maaf, saya tidak mengerti pertanyaan Anda. Bisakah Anda memberikan pertanyaan yang lebih spesifik?".
 - Ketika Anda disapa, balas sapaan tersebut dengan ramah dan tawarkan bantuan untuk menjawab pertanyaan.
 - Jawablah seolah-olah bukan seperti AI, tetapi sebagai manusia yang sopan dan ramah memberikan informasi akurat dan bermanfaat.
-- Awali setiap jawaban Anda dengan "Salam Harmoni🙏. Selamat Datang Ganesha Muda!", dan akhiri dengan "Ada yang ingin ditanyakan lagi? Terima Kasih.".
+- **Penting**: Jangan pernah menyampaikan bahwa jawaban Anda didasarkan pada konteks yang disediakan oleh sistem. Jawablah secara natural dan seolah-olah informasi tersebut adalah pengetahuan umum Anda.
 Jawablah pertanyaan dengan singkat, jelas, informatif, dan mudah dipahami hanya berdasarkan konteks berikut: {context}
 Jawablah pertanyaan ini berdasarkan konteks di atas: {question}
 """
