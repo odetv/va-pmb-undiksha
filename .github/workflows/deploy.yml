@@ -53,7 +53,8 @@ jobs:
               git pull origin main
             else
               echo "Git repository ditemukan. Menarik pembaruan terbaru..."
-              git pull origin main -f
+              git reset --hard
+              git pull origin main
             fi
 
             # Cek apakah virtual environment ada, jika tidak, buat yang baru
