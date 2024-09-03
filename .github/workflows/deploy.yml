@@ -78,7 +78,7 @@ jobs:
             PIDS=$(ps aux | grep "python main.py" | grep -v grep | awk '{print $2}')
             if [ -n "$PIDS" ]; then
               echo "Menghentikan aplikasi dengan PID: $PIDS"
-              kill -9 $PIDS
+              sudo kill -9 $PIDS
             else
               echo "Tidak ada aplikasi yang berjalan."
             fi
