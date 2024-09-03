@@ -53,6 +53,7 @@ jobs:
               git pull origin main
             else
               echo "Git repository ditemukan. Menarik pembaruan terbaru..."
+              git remote add origin https://github.com/odetv/chatbot-pmb-undiksha.git
               git pull origin main
             fi
 
