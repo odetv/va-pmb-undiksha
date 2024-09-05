@@ -87,7 +87,6 @@ jobs:
             # Jalankan aplikasi FastAPI
             sudo rm -rf chromadb
             sudo nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
-            radeontop
 
             echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."
           EOF
