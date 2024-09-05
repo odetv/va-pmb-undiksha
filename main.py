@@ -37,9 +37,9 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
 MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3"
 EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)   # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
-RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)                # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
+RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
+CHUNK_OVERLAP = 75
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
 HASH_FILE = "config/file_hashes.json"
