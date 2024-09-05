@@ -85,6 +85,7 @@ jobs:
             fi
 
             # Jalankan aplikasi FastAPI
+            sudo rm -rf chromadb
             sudo nohup $VENV_DIR/bin/python main.py > output.log 2>&1 &
 
             echo "Deploy selesai. Aplikasi FastAPI sudah berjalan."

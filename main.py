@@ -39,7 +39,7 @@ EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_E
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
 RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
+CHUNK_OVERLAP = 150
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
 HASH_FILE = "config/file_hashes.json"
