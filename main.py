@@ -39,7 +39,7 @@ EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_E
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
 RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 500
-CHUNK_OVERLAP = 75
+CHUNK_OVERLAP = 100
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
 HASH_FILE = "config/file_hashes.json"
@@ -64,7 +64,7 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 - Jawablah seolah-olah bukan seperti AI, tetapi sebagai manusia yang sopan dan ramah memberikan informasi akurat dan bermanfaat.
 - **Penting**: Jangan pernah menyampaikan bahwa jawaban Anda didasarkan pada konteks yang disediakan oleh sistem. Jawablah secara natural dan seolah-olah informasi tersebut adalah pengetahuan umum Anda.
 Jawablah pertanyaan dengan singkat, jelas, informatif, dan mudah dipahami hanya berdasarkan konteks berikut: {context}
-Jawablah pertanyaan ini berdasarkan konteks di atas: {question}
+Jawablah pertanyaan ini berdasarkan konteks di atas: {question}?
 """
 
 
