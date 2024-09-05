@@ -1,4 +1,4 @@
-# CHATBOT INFO PMB UNDIKSHA
+# CHATBOT INFO PMB UNDIKSHA (LANGCHAIN)
 
 ## Ringkasan
 
@@ -32,7 +32,6 @@ Chatbot Info PMB Undiksha menawarkan solusi modern untuk mengatasi permasalahan 
 ## Apa itu RAG?
 
 ![image](https://gradientflow.com/wp-content/uploads/2023/10/newsletter87-RAG-simple.png)
-
 Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, chatbot dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
@@ -53,7 +52,6 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 ## Contoh Implementasi
 
 ![image](https://miro.medium.com/v2/resize:fit:828/format:webp/1*h5SO9Hqu1YVYQVEIsWGZBg.png)
-
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
@@ -70,6 +68,39 @@ Prompt: "Syarat-syarat pendaftaran mahasiswa baru di UndikshaSyarat-syarat penda
 
 LLM memproses prompt tersebut untuk menghasilkan respons lengkap.
 Respons Akhir: "Syarat-syarat pendaftaran mahasiswa baru di Undiksha adalah sebagai berikut: Untuk mendaftar sebagai mahasiswa baru di Undiksha, calon mahasiswa harus memiliki ijazah SMA atau sederajat, melengkapi formulir pendaftaran, dan mengikuti ujian masuk."
+
+## Instalasi Project
+
+Clone project
+
+```bash
+  https://github.com/odetv/chatbot-pmb-undiksha.git
+```
+
+Masuk ke direktori project
+
+```bash
+  cd chatbot-pmb-undiksha
+```
+
+Install Requirements
+
+```bash
+  pip install -r requirements.txt
+```
+
+Buat dan Lengkapi file environment variabel (.env)
+
+```bash
+  OPENAI_API_KEY="API_KEY_OPENAI_PLATFORM"
+  CHATBOT_API_KEY="API_KEY_KEAMANAN_APLIKASI_BEBAS"
+```
+
+Jalankan project
+
+```bash
+  uvicorn main:app --host=0.0.0.0 --port=8000 --reload
+```
 
 ## Referensi
 
