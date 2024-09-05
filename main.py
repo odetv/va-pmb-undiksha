@@ -37,7 +37,7 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
 MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3"
 EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)   # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
-RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0)                  # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0)""
+RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)                # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100
 CHROMA_PATH = "chromadb"
@@ -244,7 +244,7 @@ async def startup_event():
 # Endpoint GET untuk memberikan informasi dasar tentang API
 @app.get("/")
 async def root():
-    return {"message": "API Chatbot PMB Undiksha", "hint": "Diperlukan API Key untuk mengakses API ini!", "lastupdate":"2024-09-05 08:45:09"}
+    return {"message": "API Chatbot PMB Undiksha", "hint": "Diperlukan API Key untuk mengakses API ini!", "lastupdate":"2024-09-05 09:13:10"}
 
 # Endpoint POST untuk melakukan query terhadap model RAG
 @app.post("/chat", response_model=QuestionResponse, dependencies=[Depends(verify_api_key)])
