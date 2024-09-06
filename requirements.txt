@@ -8,6 +8,7 @@ langchain
 langchain-community
 langchain-openai
 langchain_chroma
+langchain-huggingface
 tiktoken
 chromadb
 pytest

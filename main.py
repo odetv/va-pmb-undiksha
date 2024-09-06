@@ -15,6 +15,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_huggingface import HuggingFaceEmbeddings
 
 
 # Memuat variabel lingkungan dari file .env ke dalam lingkungan Python.
@@ -34,12 +35,12 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
     
 
 # Variabel konfigurasi untuk membangun RAG
-MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3"
-EMBEDDER=OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)   # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)""
+MODEL_EMBEDDING = "bge-m3"                                                                                      # OpenAI: "text-embedding-ada-002"                  / Ollama: "bge-m3" / HuggingFace: BAAI/bge-large-en-v1.5
+EMBEDDER = OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True) # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)" / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)" / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
 MODEL_LLM = "llama3.1"                                                                                          # OpenAI: "gpt-4o"                                  / Ollama: "llama3.1"
 RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM)                                 # OpenAI: "ChatOpenAI(model=MODEL_LLM)"             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 500
-CHUNK_OVERLAP = 150
+CHUNK_OVERLAP = 100
 CHROMA_PATH = "chromadb"
 DATA_PATH = "dataset"
 HASH_FILE = "config/file_hashes.json"
@@ -54,7 +55,7 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.
 - Jawab sesuai apa yang ditanyakan saja dan Jangan menggunakan informasi diluar konteks.
 - Berikan link informasi selengkapnya sesuai konteks agar jawaban Anda lebih informatif.
-- Sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya dan sarankan untuk mengecek informasi lebih lanjut di website resmi Undiksha (https://undiksha.ac.id)
+- Sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
 - Jangan memberikan jawaban spekulatif atau mengarang jawaban.
 - Jangan menggunakan kata-kata kasar, menghina, atau merendahkan pihak lain.
 - Pahami singkatan atau typografi yang ditanyakan.
@@ -65,8 +66,8 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 - Jawablah seolah-olah bukan seperti AI, tetapi sebagai manusia yang sopan dan ramah memberikan informasi akurat dan bermanfaat.
 - Jika pertanyaan membingungkan, pelajari dengan mengolah kata-kata nya agar mendapat makna pertanyaan tersebut.
 - **Penting**: Jangan pernah menyampaikan bahwa jawaban Anda didasarkan pada konteks yang disediakan oleh sistem.
-Jawablah pertanyaan dengan singkat, jelas, informatif, dan mudah dipahami hanya berdasarkan konteks berikut: {context}
-Jawablah pertanyaan ini berdasarkan konteks di atas: {question}?
+Jawablah pertanyaan hanya berdasarkan konteks berikut: {context}
+Jawablah pertanyaan ini dengan detail dan jelas berdasarkan konteks di atas: {question}?
 """
 
 
@@ -209,7 +210,8 @@ def query_rag(query_text: str):
     prompt = prompt_template.format(context=context_text, question=query_text)
 
     llm = RETRIEVE_LLM
-    response_text = llm.invoke(prompt) # OpenAI: llm.invoke(prompt) / Ollama: llm.invoke(prompt).content
+    # response_text = llm.invoke(prompt) # OpenAI: llm.invoke(prompt).content / Ollama: llm.invoke(prompt)
+    response_text = llm.invoke(prompt).content if hasattr(llm.invoke(prompt), 'content') else llm.invoke(prompt)
 
     return {
         "model_embedding": MODEL_EMBEDDING,
