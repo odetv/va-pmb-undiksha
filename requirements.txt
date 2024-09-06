@@ -3,6 +3,7 @@
 # venv/Scripts/activate         # On Windows
 # source myvenv/bin/activate    # On macOS/Linux
 
+requests
 python-dotenv
 langchain
 langchain-community

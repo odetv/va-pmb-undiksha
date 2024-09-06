@@ -66,8 +66,8 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 - Jawablah seolah-olah bukan seperti AI, tetapi sebagai manusia yang sopan dan ramah memberikan informasi akurat dan bermanfaat.
 - Jika pertanyaan membingungkan, pelajari dengan mengolah kata-kata nya agar mendapat makna pertanyaan tersebut.
 - **Penting**: Jangan pernah menyampaikan bahwa jawaban Anda didasarkan pada konteks yang disediakan oleh sistem.
-Jawablah pertanyaan hanya berdasarkan konteks berikut: {context}
-Jawablah pertanyaan ini dengan detail dan jelas berdasarkan konteks di atas: {question}?
+Konteks: {context}
+Pertanyaan: {question}?
 """
 
 
@@ -188,29 +188,53 @@ def build_vectordb():
         print("No changes in files or parameters, skipping ChromaDB update.")
 
 
+# Fungsi untuk normalisasi skor relevansi
+def normalize_scores(retriever_results):
+    scores = [score for _doc, score in retriever_results]
+    min_score = min(scores)
+    max_score = max(scores)
+
+    if min_score == max_score:
+        normalized = [(doc, 1.0) for doc, score in retriever_results]
+    else:
+        normalized = [
+            (doc, (score - min_score) / (max_score - min_score)) for doc, score in retriever_results
+        ]
+    
+    return normalized
+
+
 # Fungsi untuk melakukan pencarian RAG menggunakan ChromaDB
 def query_rag(query_text: str):
+    # Inisialisasi vektor database dari Chroma
     vectordb = Chroma(
         embedding_function=EMBEDDER,
         persist_directory=CHROMA_PATH
     )
 
+    # Mengambil hasil pencarian dengan skor relevansi
     retriever = vectordb.similarity_search_with_relevance_scores(query_text, k=5)
-    # retriever = vectordb.max_marginal_relevance_search(query_text, k=5, lambda_mult=0.5)
 
-    context_text = ""
-    sources = []
+    # Normalisasi skor relevansi
+    normalized_retriever = normalize_scores(retriever)
 
-    context_text = "\n---\n".join([doc.page_content for doc, _score in retriever])
-    sources = [doc.metadata.get("source", None) for doc, _score in retriever]
-    # context_text = "\n---\n".join([doc.page_content for doc in retriever])
-    # sources = [doc.metadata.get("source", None) for doc in retriever]
+    # Mengurutkan dokumen berdasarkan relevansi tertinggi
+    normalized_retriever.sort(key=lambda x: x[1], reverse=True)
 
+    # Gabungkan konten dari dokumen yang relevan
+    context_text = "\n---\n".join([doc.page_content for doc, _score in normalized_retriever])
+    sources = [doc.metadata.get("source", None) for doc, _score in normalized_retriever]
+
+    # Cetak untuk debugging
+    print(f"Normalized scores: {[score for _doc, score in normalized_retriever]}")
+    print(context_text)
+
+    # Menggunakan template prompt untuk LLM
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
 
+    # Memanggil LLM untuk menghasilkan jawaban berdasarkan prompt
     llm = RETRIEVE_LLM
-    # response_text = llm.invoke(prompt) # OpenAI: llm.invoke(prompt).content / Ollama: llm.invoke(prompt)
     response_text = llm.invoke(prompt).content if hasattr(llm.invoke(prompt), 'content') else llm.invoke(prompt)
 
     return {
