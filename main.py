@@ -5,11 +5,16 @@ import hashlib
 import json
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Depends
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security.api_key import APIKeyHeader
-from pydantic import BaseModel
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pydantic import BaseModel, Field, ValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_405_METHOD_NOT_ALLOWED
 from langchain.schema.document import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
@@ -251,7 +256,7 @@ app = FastAPI()
 
 # Model Pydantic untuk validasi input permintaan pertanyaan
 class QuestionRequest(BaseModel):
-    question: str
+    question: str = Field(..., min_length=1, description="Question field must not be empty.")
 
 # Model Pydantic untuk validasi output respons pertanyaan
 class QuestionResponse(BaseModel):
@@ -263,6 +268,18 @@ class QuestionResponse(BaseModel):
     class Config:
         protected_namespaces = ()
 
+# Fungsi untuk merespons API menggunakan JSONResponse
+def api_response(status_code: int, success: bool, message: str, data=None):
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "statusCode": status_code,
+            "success": success,
+            "message": message,
+            "data": data
+        }
+    )
+
 # Fungsi yang dijalankan pada saat startup aplikasi
 @app.on_event("startup")
 async def startup_event():
@@ -272,14 +289,88 @@ async def startup_event():
 # Endpoint GET untuk memberikan informasi dasar tentang API
 @app.get("/")
 async def root():
-    return {"message": "API Chatbot PMB Undiksha", "hint": "Diperlukan API Key untuk mengakses API ini!", "lastupdate":"2024-09-06 22:20:01"}
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return {
+        "timestamp": current_time,
+        "message": "API Chatbot PMB Undiksha",
+        "hint": "Diperlukan API Key CHATBOT-API-KEY untuk menggunakan Chatbot ini!"
+    }
 
 # Endpoint POST untuk melakukan query terhadap model RAG
-@app.post("/chat", response_model=QuestionResponse, dependencies=[Depends(verify_api_key)])
-def chat_endpoint(question_request: QuestionRequest):
-    build_vectordb()
-    response = query_rag(question_request.question)
-    return QuestionResponse(**response)
+@app.post("/chat")
+def chat_endpoint(question_request: QuestionRequest, api_key: str = Depends(verify_api_key)):
+    try:
+        build_vectordb()
+        response = query_rag(question_request.question)
+        return api_response(
+            status_code=200,
+            success=True,
+            message="OK",
+            data=[{
+                "model_embedding": response["model_embedding"],
+                "model_llm": response["model_llm"],
+                "question": response["question"],
+                "answer": response["answer"],
+                "sources": response["sources"]
+            }]
+        )
+    except HTTPException as e:
+        return api_response(
+            status_code=e.status_code,
+            success=False,
+            message=f"Failed: {e.detail}",
+            data=None
+        )
+    except Exception as e:
+        return api_response(
+            status_code=500,
+            success=False,
+            message=f"Failed: {str(e)}",
+            data=None
+        )
+
+# Custom handler untuk 404 Not Found
+@app.exception_handler(HTTP_404_NOT_FOUND)
+async def not_found_handler(request: Request, exc: StarletteHTTPException):
+    return api_response(
+        status_code=404,
+        success=False,
+        message="Failed: Not Found",
+        data=None
+    )
+
+# Custom handler untuk 405 Method Not Allowed
+@app.exception_handler(HTTP_405_METHOD_NOT_ALLOWED)
+async def method_not_allowed_handler(request: Request, exc: StarletteHTTPException):
+    return api_response(
+        status_code=405,
+        success=False,
+        message="Failed: Method Not Allowed",
+        data=None
+    )
+
+# General handler untuk HTTP Exception lain
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    return api_response(
+        status_code=exc.status_code,
+        success=False,
+        message=f"Failed: {exc.detail}",
+        data=None
+    )
+
+# General handler untuk validasi error
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    error_messages = "; ".join([f"{err['loc']}: {err['msg']}" for err in errors])
+
+    return api_response(
+        status_code=422,
+        success=False,
+        message=f"Failed: Validation Error - {error_messages}",
+        data=None
+    )
 
 
 # Run: uvicorn main:app --port=1014 --reload
