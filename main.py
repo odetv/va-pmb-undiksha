@@ -41,10 +41,10 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
     
 
 # Variabel konfigurasi untuk membangun RAG
-MODEL_EMBEDDING = "text-embedding-3-large"                                                                          # OpenAI: "text-embedding-ada-002 or text-embedding-3-large"        / Ollama: "bge-m3"                                                                                                  / HuggingFace: BAAI/bge-large-en-v1.5
-EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)                                                                  # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)"                 / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)"    / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
-MODEL_LLM = "gpt-4o-mini"                                                                                           # OpenAI: "gpt-4o or gpt-4o-mini"                                   / Ollama: "llama3.1 or gemma2"
-RETRIEVE_LLM = ChatOpenAI(model=MODEL_LLM)                                                                          # OpenAI: "ChatOpenAI(model=MODEL_LLM)"                             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
+MODEL_EMBEDDING = "bge-m3"                                                                                          # OpenAI: "text-embedding-ada-002 or text-embedding-3-large"        / Ollama: "bge-m3"                                                                                                  / HuggingFace: BAAI/bge-large-en-v1.5
+EMBEDDER = OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)     # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)"                 / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)"    / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
+MODEL_LLM = "llama3.1"                                                                                              # OpenAI: "gpt-4o or gpt-4o-mini"                                   / Ollama: "llama3.1 or gemma2"
+RETRIEVE_LLM = Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=1)                      # OpenAI: "ChatOpenAI(model=MODEL_LLM)"                             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 100
 VECTOR_PATH = "vectordb"

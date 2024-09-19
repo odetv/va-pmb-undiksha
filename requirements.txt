@@ -18,3 +18,5 @@ pdfplumber
 openai
 fastapi
 uvicorn
+faiss-cpu
+faiss-gpu
