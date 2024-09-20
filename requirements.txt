@@ -1,3 +1,4 @@
+# Run before pip install -r requirements.txt
 # pip install virtualenv
 # python -m venv venv
 # venv/Scripts/activate         # On Windows
@@ -18,5 +19,6 @@ pdfplumber
 openai
 fastapi
 uvicorn
-faiss-cpu
-faiss-gpu
+faiss
+faiss-cpu==1.8.0
+faiss-gpu==1.7.2
