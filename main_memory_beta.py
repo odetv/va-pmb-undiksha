@@ -22,6 +22,9 @@ from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 from langchain_community.vectorstores import FAISS
+from langchain.memory import ConversationBufferMemory
+from langchain.chains import ConversationChain
+from langchain.memory import ConversationSummaryBufferMemory
 
 
 # Memuat variabel lingkungan dari file .env ke dalam lingkungan Python.
@@ -42,8 +45,8 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
     
 
 # Variabel konfigurasi untuk membangun RAG
-MODEL_EMBEDDING = "text-embedding-3-large"                                                                          # OpenAI: "text-embedding-ada-002 or text-embedding-3-large"        / Ollama: "bge-m3"                                                                                                  / HuggingFace: BAAI/bge-large-en-v1.5
-EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)                                                                  # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)"                 / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)"    / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
+MODEL_EMBEDDING = "bge-m3"                                                                                          # OpenAI: "text-embedding-ada-002 or text-embedding-3-large"        / Ollama: "bge-m3"                                                                                                  / HuggingFace: BAAI/bge-large-en-v1.5
+EMBEDDER = OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)     # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)"                 / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)"    / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
 MODEL_LLM = "gpt-4o-mini"                                                                                           # OpenAI: "gpt-4o or gpt-4o-mini"                                   / Ollama: "llama3.1 or gemma2"
 RETRIEVE_LLM = ChatOpenAI(model=MODEL_LLM)                                                                          # OpenAI: "ChatOpenAI(model=MODEL_LLM)"                             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 900
@@ -70,6 +73,11 @@ Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan ses
 Konteks: {context}
 Pertanyaan: {question}
 """
+
+
+# Membuat memori percakapan yang telah dilakukan
+# memory = ConversationBufferMemory()                                               # Default All Memory
+memory = ConversationSummaryBufferMemory(llm=RETRIEVE_LLM, max_token_limit=1000)    # Summary Memory
 
 
 # Fungsi untuk memeriksa direktori konfigurasi
@@ -238,7 +246,12 @@ def query_rag(query_text: str):
     prompt = prompt_template.format(context=context_text, question=query_text)
 
     # Memanggil LLM untuk menghasilkan jawaban berdasarkan prompt
-    llm = RETRIEVE_LLM
+    # llm = RETRIEVE_LLM
+    llm = ConversationChain(
+        llm=RETRIEVE_LLM,
+        memory=memory,
+        verbose=True
+    )
     response_text = llm.invoke(prompt).content if hasattr(llm.invoke(prompt), 'content') else llm.invoke(prompt)
 
     return {
