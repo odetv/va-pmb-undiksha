@@ -16,11 +16,12 @@ from starlette.status import HTTP_404_NOT_FOUND, HTTP_405_METHOD_NOT_ALLOWED
 from langchain.schema.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.prompts import ChatPromptTemplate
+from langchain_community.llms.ollama import Ollama
+from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
 from langchain_community.vectorstores import FAISS
-from langchain.chains.conversation.memory import ConversationSummaryBufferMemory, ConversationBufferWindowMemory
-from langchain.chains import ConversationChain
-
 
 
 # Memuat variabel lingkungan dari file .env ke dalam lingkungan Python.
@@ -41,10 +42,10 @@ def verify_api_key(header_key: str = Depends(chatbot_api_key_header)):
     
 
 # Variabel konfigurasi untuk membangun RAG
-MODEL_EMBEDDING = "text-embedding-3-large"
-EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
-MODEL_LLM = "gpt-4o-mini"
-RETRIEVE_LLM = ChatOpenAI(model=MODEL_LLM)
+MODEL_EMBEDDING = "text-embedding-3-large"                                                                          # OpenAI: "text-embedding-ada-002 or text-embedding-3-large"        / Ollama: "bge-m3"                                                                                                  / HuggingFace: BAAI/bge-large-en-v1.5
+EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)                                                                  # OpenAI: "OpenAIEmbeddings(model=MODEL_EMBEDDING)"                 / Ollama: "OllamaEmbeddings(base_url="http://119.252.174.189:11434", model=MODEL_EMBEDDING, show_progress=True)"    / HuggingFace: HuggingFaceEmbeddings(model_name=MODEL_EMBEDDING)
+MODEL_LLM = "gpt-4o-mini"                                                                                           # OpenAI: "gpt-4o or gpt-4o-mini"                                   / Ollama: "llama3.1 or gemma2"
+RETRIEVE_LLM = ChatOpenAI(model=MODEL_LLM)                                                                          # OpenAI: "ChatOpenAI(model=MODEL_LLM)"                             / Ollama: "Ollama(base_url="http://119.252.174.189:11434", model=MODEL_LLM, temperature=0.5)""
 CHUNK_SIZE = 900
 CHUNK_OVERLAP = 100
 VECTOR_PATH = "vectordb"
@@ -174,8 +175,15 @@ def build_vectordb():
         if chunks:
             if os.path.exists(VECTOR_PATH):
                 shutil.rmtree(VECTOR_PATH)
+
+            # vectordb = Chroma.from_documents(
+            #     chunks,
+            #     embedding=EMBEDDER,
+            #     persist_directory=VECTOR_PATH
+            # )
             vectordb = FAISS.from_documents(chunks, EMBEDDER)
             vectordb.save_local(VECTOR_PATH)
+            
             print(f"Saved {len(chunks)} chunks to {VECTOR_PATH}.")
         else:
             print("No valid chunks to update in VectorDB.")
@@ -183,30 +191,54 @@ def build_vectordb():
         print("No changes in files or parameters, skipping VectorDB update.")
 
 
-# Fungsi untuk melakukan pencarian RAG
+# Fungsi untuk normalisasi skor relevansi
+def normalize_scores(retriever_results):
+    scores = [score for _doc, score in retriever_results]
+    min_score = min(scores)
+    max_score = max(scores)
+
+    if min_score == max_score:
+        normalized = [(doc, 1.0) for doc, score in retriever_results]
+    else:
+        normalized = [
+            (doc, (score - min_score) / (max_score - min_score)) for doc, score in retriever_results
+        ]
+    
+    return normalized
+
+
+# Fungsi untuk melakukan pencarian RAG menggunakan ChromaDB
 def query_rag(query_text: str):
-    # Inisialisasi vektor database dari VectorDB
+    # Inisialisasi vektor database dari Chroma
+    # vectordb = Chroma(
+    #     embedding_function=EMBEDDER,
+    #     persist_directory=VECTOR_PATH
+    # )
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
 
     # Mengambil hasil pencarian dengan skor relevansi
     retriever = vectordb.similarity_search_with_relevance_scores(query_text, k=5)
 
+    # Normalisasi skor relevansi
+    normalized_retriever = normalize_scores(retriever)
+
+    # Mengurutkan dokumen berdasarkan relevansi tertinggi
+    normalized_retriever.sort(key=lambda x: x[1], reverse=True)
+
     # Gabungkan konten dari dokumen yang relevan
-    context_text = "\n".join([doc.page_content for doc, _score in retriever])
-    sources = [doc.metadata.get("source", None) for doc, _score in retriever]
+    context_text = "\n".join([doc.page_content for doc, _score in normalized_retriever])
+    sources = [doc.metadata.get("source", None) for doc, _score in normalized_retriever]
+
+    # Cetak untuk debugging
+    print(f"Normalized scores: {[score for _doc, score in normalized_retriever]}")
+    print(context_text)
 
     # Menggunakan template prompt untuk LLM
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
 
     # Memanggil LLM untuk menghasilkan jawaban berdasarkan prompt
-    memory_conversation = ConversationSummaryBufferMemory(llm=RETRIEVE_LLM, max_token_limit=10000)
-    # llm = RETRIEVE_LLM
-    llm = ConversationChain(
-        llm=RETRIEVE_LLM,
-        memory=memory_conversation,
-        verbose=True
-    )
+    llm = RETRIEVE_LLM
     response_text = llm.invoke(prompt).content if hasattr(llm.invoke(prompt), 'content') else llm.invoke(prompt)
 
     return {
