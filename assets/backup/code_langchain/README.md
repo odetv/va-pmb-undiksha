@@ -1,22 +1,21 @@
-# VIRTUAL ASSISTANT PMB UNDIKSHA
+# CHATBOT INFO PMB UNDIKSHA (LANGCHAIN)
 
 ## Ringkasan
 
-![image](assets/images/RAG%20Concept.jpg)
-Proyek ini mengembangkan Virtual Assistant (VA) berbasis Retrieval Augmented Generation (RAG) untuk Sistem Informasi Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan Ollama, OpenAI, LangChain, Langgraph, dan FAISS. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
+Proyek ini mengembangkan chatbot berbasis Retrieval Augmented Generation (RAG) untuk Sistem Informasi Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan Ollama, LangChain, ChromaDB, dan FastAPI, chatbot ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
 
 ## Permasalahan
 
-Di periode-periode sebelumnya, pada Sistem Informasi PMB Undiksha masih mengandalkan penyebaran informasi secara manual melalui website atau grup sosial media seperti Telegram, yang mengharuskan pengguna untuk secara aktif mencari informasi. Pendekatan ini memiliki beberapa kelemahan, yaitu:
+Pada periode-periode sebelumnya, Sistem Informasi PMB Undiksha masih mengandalkan penyebaran informasi secara manual melalui website atau grup sosial media seperti Telegram, yang mengharuskan pengguna untuk secara aktif mencari informasi. Pendekatan ini memiliki beberapa kelemahan, yaitu:
 
-- Tidak efisien dan memakan waktu lebih lama.
+- Tidak efisien dan memakan waktu.
 - Memerlukan interaksi langsung dengan admin atau sistem yang tidak fleksibel.
 - Seringkali calon mahasiswa mengulang pertanyaan yang sebenarnya sudah terjawab.
   Hal ini membuat pengalaman pengguna kurang optimal dan menyulitkan dalam menghadapi volume pertanyaan yang terus berkembang.
 
 ## Solusi
 
-Virtual Assistant PMB Undiksha menawarkan solusi dengan teknologi terkini untuk mengatasi permasalahan di atas. Dengan memanfaatkan Retrieval Augmented Generation (RAG), Virtual Assistant ini dapat:
+Chatbot Info PMB Undiksha menawarkan solusi modern untuk mengatasi permasalahan di atas. Dengan memanfaatkan teknologi Retrieval Augmented Generation (RAG), chatbot ini dapat:
 
 - Meningkatkan efisiensi dengan jawaban relevan dan akurat dari database dengan instan tanpa menunggu balasan langsung dari admin.
 - Menjawab pertanyaan sering diajukan dengan cepat dan konsisten.
@@ -25,16 +24,15 @@ Virtual Assistant PMB Undiksha menawarkan solusi dengan teknologi terkini untuk 
 ## Teknologi
 
 - [Python](https://www.python.org/): Bahasa pemrograman untuk membuat Chatbot.
-- [Ollama](https://ollama.com/): Embedding dan model RAG Lokal Gratis (bge-m3 & gemma2).
-- [OpenAI](https://openai.com/): Embedding dan model RAG berbayar.
+- [Ollama](https://ollama.com/): Embedding dan model RAG Lokal Gratis (bge-m3 & llama3.1).
 - [Langchain](https://www.langchain.com/): Framework untuk mengelola alur kerja RAG.
-- [Langgraph](https://www.langchain.com/langgraph): Framework untuk Multi Agent pada Langchain.
-- [FAISS](https://faiss.ai/): Penyimpanan database vektor.
+- [ChromaDB](https://www.trychroma.com/): Penyimpanan database vektor.
+- [FastAPI](https://fastapi.tiangolo.com/): Framework backend untuk membuat API.
 
 ## Apa itu RAG?
 
-![image](assets/images/RAG%20Procces.png)
-Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, Virtual Assistant dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
+![image](https://gradientflow.com/wp-content/uploads/2023/10/newsletter87-RAG-simple.png)
+Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, chatbot dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
 
@@ -53,7 +51,7 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 
 ## Contoh Implementasi
 
-![image](assets/images/RAG%20Flow.png)
+![image](https://miro.medium.com/v2/resize:fit:828/format:webp/1*h5SO9Hqu1YVYQVEIsWGZBg.png)
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
@@ -95,13 +93,13 @@ Buat dan Lengkapi file environment variabel (.env)
 
 ```bash
   OPENAI_API_KEY="API_KEY_OPENAI_PLATFORM"
-  OLLAMA_BASE_URL="BASE_URL_OLLAMA_SERVE"
+  CHATBOT_API_KEY="API_KEY_KEAMANAN_APLIKASI_BEBAS"
 ```
 
 Jalankan project
 
 ```bash
-  python main.py
+  uvicorn main:app --host=0.0.0.0 --port=8000 --reload
 ```
 
 ## Referensi
@@ -119,5 +117,3 @@ Jalankan project
 - [Memory in LLMChain](https://python.langchain.com/v0.1/docs/modules/memory/adding_memory/)
 - [How to Make LLM Remember Conversation with Langchain](https://medium.com/@vinayakdeshpande111/how-to-make-llm-remember-conversation-with-langchain-924083079d95)
 - [Conversation Summary Buffer](https://python.langchain.com/v0.1/docs/modules/memory/types/summary_buffer/)
-- [From Basics to Advanced: Exploring LangGraph](https://towardsdatascience.com/from-basics-to-advanced-exploring-langgraph-e8c1cf4db787)
-- [Build a Reliable RAG Agent using LangGraph](https://medium.com/the-ai-forum/build-a-reliable-rag-agent-using-langgraph-2694d55995cd)

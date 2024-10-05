@@ -1,9 +1,7 @@
 .env
 .pytest_cache
 __pycache__
+assets/dataset
 config
-dataset
-venv
 vectordb
-/test/log/
-/test/__pycache__/
+venv
