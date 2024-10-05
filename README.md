@@ -3,6 +3,7 @@
 ## Ringkasan
 
 ![image](assets/images/RAG%20Concept.jpg)
+
 Proyek ini mengembangkan Virtual Assistant (VA) berbasis Retrieval Augmented Generation (RAG) untuk Sistem Informasi Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan Ollama, OpenAI, LangChain, Langgraph, dan FAISS. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
 
 ## Permasalahan
@@ -34,6 +35,7 @@ Virtual Assistant PMB Undiksha menawarkan solusi dengan teknologi terkini untuk 
 ## Apa itu RAG?
 
 ![image](assets/images/RAG%20Procces.png)
+
 Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, Virtual Assistant dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
@@ -54,6 +56,7 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 ## Contoh Implementasi
 
 ![image](assets/images/RAG%20Flow.png)
+
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
