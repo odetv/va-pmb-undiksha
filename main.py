@@ -289,7 +289,7 @@ def resultWriterAgent(state: AgentState, agent_results):
         - Jangan mengarang jawaban dari informasi yang diberikan.
         Berikut adalah informasinya:
         {agent_results}
-        - Susun ulang informasi tersebut dan memodifikasi agar lebih koheren dan mudah dipahami.
+        - Susun ulang informasi tersebut dengan lengkap sehingga mudah dipahami.
         - Pastikan semua poin penting tersampaikan dan tidak ada yang terlewat, jangan mengatakan proses penyusunan ulang ini.
         - Gunakan penomoran, URL, link atau yang lainnya jika diperlukan.
         - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
