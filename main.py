@@ -60,7 +60,7 @@ def generalAgent(state: AgentState):
     PARAM_FILE = "config/file_params.json"
     prompt = """
     Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
-    - Fokus anda adalah untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha
+    - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
     - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
     - Jika ditanya siapa Anda, identitas Anda sebagai Bot Agent Informasi PMB Undiksha.
     - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.
@@ -190,7 +190,7 @@ def generalAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     return response
 
 
@@ -285,11 +285,11 @@ def resultWriterAgent(state: AgentState, agent_results):
         Berikut pedoman yang harus diikuti untuk memberikan jawaban:
         - Awali dengan "Salam Harmoni🙏"
         - Anda adalah penulis yang hebat dan pintar.
-        - Tugas Anda adalah merangkai jawaban dengan lengkap, jelas, dan komprehensif berdasarkan informasi yang diberikan.
+        - Tugas Anda adalah merangkai jawaban dengan lengkap dan jelas apa adanya berdasarkan informasi yang diberikan.
         - Jangan mengarang jawaban dari informasi yang diberikan.
         Berikut adalah informasinya:
         {agent_results}
-        - Susun ulang informasi tersebut dengan lengkap sehingga mudah dipahami.
+        - Susun ulang informasi tersebut dengan lengkap dan jelas apa adanya sehingga mudah dipahami.
         - Pastikan semua poin penting tersampaikan dan tidak ada yang terlewat, jangan mengatakan proses penyusunan ulang ini.
         - Gunakan penomoran, URL, link atau yang lainnya jika diperlukan.
         - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
@@ -298,7 +298,7 @@ def resultWriterAgent(state: AgentState, agent_results):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     print(response)
     return response
 
