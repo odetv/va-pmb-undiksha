@@ -8,7 +8,7 @@ from tools.llm import chat_openai, chat_ollama
 from tools.apiUndiksha import apiKtmMhs
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
-
+from tools.graph_image import get_graph_image
 
 class AgentState(TypedDict):
     context : str
@@ -48,6 +48,7 @@ def generalAgent(state: AgentState):
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
+    question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
@@ -62,10 +63,10 @@ def graderDocsAgent(state: AgentState):
     Pertanyaan Pengguna: {question}
     Konteks: {context}
     """
-    
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
+    question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context_text = "\n".join([doc.page_content for doc, _score in retriever])
@@ -100,6 +101,7 @@ def answerGeneratorAgent(state: AgentState):
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
+    question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context_text = "\n".join([doc.page_content for doc, _score in retriever])
@@ -121,10 +123,10 @@ def graderHallucinationsAgent(state: AgentState):
     Anda adalah seorang penilai yang menilai apakah pembuatan LLM didasarkan pada/didukung oleh sekumpulan fakta yang diambil.
     Berikan hanya nilai "true" jika halusinasi atau "false" jika tidak halusinasi.
     """
-
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
+    question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context_text = "\n".join([doc.page_content for doc, _score in retriever])
@@ -249,80 +251,52 @@ def resultWriterAgent(state: AgentState, agent_results):
     return response
 
 
-def routeToSpecificAgent(state: AgentState):
-    question_types = [q_type.strip().lower() for q_type in re.split(r',\s*', state["question_type"])]
-    agents = []
-    if "general" in question_types:
-        agents.append("general")
-    if "ktm" in question_types:
-        agents.append("ktm")
-    if "incompletenim" in question_types:
-        agents.append("incompletenim")
-    if "printktm" in question_types:
-        agents.append("printktm")
-    if "outofcontext" in question_types:
-        agents.append("outOfContext")
-    return agents
+def build_graph(question):
+    workflow = StateGraph(AgentState)
+    workflow.add_node("questionIdentifier", questionIdentifierAgent)
+    workflow.add_node("resultWriter", resultWriterAgent)
+    workflow.add_edge(START, "questionIdentifier")
+
+    context = questionIdentifierAgent
+
+    print(f"Context: {context}")  # Print context for debugging
+
+    if "general" in context:
+        workflow.add_node("general", generalAgent)
+        workflow.add_node("graderdocs", graderDocsAgent)
+        workflow.add_node("answergenerator", answerGeneratorAgent)
+        workflow.add_node("graderhallucinations", graderHallucinationsAgent)
+
+        # Koneksi antara node
+        workflow.add_edge("questionIdentifier", "general")
+        workflow.add_edge("general", "graderdocs")
+        workflow.add_edge("graderdocs", "answergenerator")
+        workflow.add_edge("answergenerator", "graderhallucinations")
+        workflow.add_edge("graderhallucinations", "resultWriter")  # Pastikan ada koneksi ke resultWriter
+
+    if "ktm" in context:
+        workflow.add_node("ktm", ktmAgent)
+        workflow.add_node("incompletenim", incompleteNimAgent)
+        workflow.add_node("printktm", printKtmAgent)
+
+        workflow.add_edge("questionIdentifier", "ktm")
+        workflow.add_edge("ktm", "incompletenim")
+        workflow.add_edge("ktm", "printktm")
+        workflow.add_edge("incompletenim", "resultWriter")  # Koneksi ke resultWriter
+        workflow.add_edge("printktm", "resultWriter")  # Koneksi ke resultWriter
+
+    if "outofcontext" in context:
+        workflow.add_node("outofcontext", outOfContextAgent)
+        workflow.add_edge("questionIdentifier", "outofcontext")
+        workflow.add_edge("outofcontext", "resultWriter")  # Koneksi ke resultWriter
+
+    # Akhirkan alur ke END
+    workflow.add_edge("resultWriter", END)
+
+    graph = workflow.compile()
+    graph.invoke({'question': question})
+    get_graph_image(graph)
 
 
-def executeAgents(state: AgentState, agents):
-    agent_results = []
-    response_grader_docs = None  # Variabel untuk menyimpan hasil dari graderDocsAgent
-    while agents:
-        agent = agents.pop(0)
-        if agent == "general":
-            agent_results.append(graderDocsAgent(state))
-        elif agent == "ktm":
-            ktmAgent(state)
-            additional_agents = routeToSpecificAgent(state)
-            for additional_agent in additional_agents:
-                if additional_agent not in agents:
-                    agents.insert(0, additional_agent)
-        elif agent == "incompletenim":
-            agent_results.append(incompleteNimAgent(state))
-        elif agent == "printktm":
-            urlKtmMhs = apiKtmMhs()
-            agent_results.append(printKtmAgent(state, urlKtmMhs))
-        elif agent == "outOfContext":
-            agent_results.append(outOfContextAgent(state))
-    print(f"Konteks: {agent_results}\n")
-    return agent_results
-
-
-# Definisikan Langgraph
-workflow = StateGraph(AgentState)
-
-# Definisikan Node
-workflow.add_node("question_identifier", questionIdentifierAgent)
-workflow.add_node("general", generalAgent)
-workflow.add_node("ktm", ktmAgent)
-workflow.add_node("incompletenim", incompleteNimAgent)
-workflow.add_node("printKtm", printKtmAgent)
-workflow.add_node("outOfContext", outOfContextAgent)
-workflow.add_node("resultWriter", resultWriterAgent)
-
-# Definisikan Edge
-workflow.add_edge(START, "question_identifier")
-workflow.add_conditional_edges(
-    "question_identifier",
-    routeToSpecificAgent
-)
-
-graph = workflow.compile()
-
-
-# Contoh pertanyaan
-question = "bagaimana tahapan pendaftaran SNBT di Undiksha?"
-state = {"question": question}
-
-# Jalankan question identifier untuk mendapatkan agen yang perlu dieksekusi
-question_identifier_result = questionIdentifierAgent(state)
-
-# Identifikasi agen-agen yang relevan
-agents_to_execute = routeToSpecificAgent(question_identifier_result)
-
-# Eksekusi semua agen yang relevan dan kumpulkan hasilnya
-agent_results = executeAgents(state, agents_to_execute)
-
-# Jalankan resultWriterAgent untuk menghasilkan jawaban final
-resultWriterAgent(state, agent_results)
+# Contoh eksekusi
+build_graph("siapa rektor undiksha")
