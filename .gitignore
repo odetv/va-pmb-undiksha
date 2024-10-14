@@ -3,5 +3,6 @@
 __pycache__
 assets/datasets
 config
+eval/.deepeval
 vectordb
 venv

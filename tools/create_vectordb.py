@@ -13,9 +13,9 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 CHUNK_SIZE = 900
 CHUNK_OVERLAP = 100
-VECTOR_PATH = "vectordb3"
+VECTOR_PATH = "vectordb"
 DATASET_PATH = "assets/datasets"
-MODEL_EMBEDDING = "text-embedding-3-large"
+MODEL_EMBEDDING = "text-embedding-3-small"
 EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
 
 documents = []
