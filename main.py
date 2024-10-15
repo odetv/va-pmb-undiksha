@@ -44,7 +44,7 @@ def questionIdentifierAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     cleaned_response = response.strip().lower()
     print("Pertanyaan:", state["question"])
     print(f"question_type: {cleaned_response}\n")
@@ -56,7 +56,7 @@ def generalAgent(state: AgentState):
     info = "--- GENERAL ---"
     print(info+"\n")
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -77,7 +77,7 @@ def graderDocsAgent(state: AgentState):
     Konteks: {state["generalContext"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -90,7 +90,7 @@ def graderDocsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    responseGraderDocsAgent = chat_openai(messages)
+    responseGraderDocsAgent = chat_ollama(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
     print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
@@ -113,7 +113,7 @@ def answerGeneratorAgent(state: AgentState):
     Konteks: {state["generalGraderDocs"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -126,7 +126,7 @@ def answerGeneratorAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     state["responseGeneral"] = response
     state["agentsContext"] = response
     print(state["responseGeneral"])
@@ -142,7 +142,7 @@ def graderHallucinationsAgent(state: AgentState):
     Informasi Fakta: \n\n {state["generalGraderDocs"]} \n\n Hasil: {state["agentsContext"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -155,7 +155,7 @@ def graderHallucinationsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_ollama(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
     print(f"Is hallucination: {is_hallucination}")
@@ -179,7 +179,7 @@ def ktmAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     cleaned_response = response.strip().lower()
 
     nim_match = re.search(r'\b\d{10}\b', state['question'])
@@ -216,7 +216,7 @@ def incompleteNimAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     print(response)
     return response
 
@@ -235,7 +235,7 @@ def printKtmAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     state["responseKTM"] = response
     state["agentsContext"] = response
     print (state["responseKTM"])
@@ -272,7 +272,7 @@ def resultWriterAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     state["responseFinal"] = response
     print (state["responseFinal"])
     return {"responseFinal": state["responseFinal"]}
