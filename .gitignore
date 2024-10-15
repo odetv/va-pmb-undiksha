@@ -1,8 +1,9 @@
-.env
 .pytest_cache
 __pycache__
 assets/datasets
-config
 eval/.deepeval
+eval/.deepeval-cache.json
+utils/logfile
 vectordb
 venv
+.env

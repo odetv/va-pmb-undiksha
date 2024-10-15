@@ -1,30 +1,13 @@
 import re
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
-from typing import TypedDict
-from langchain.memory import ConversationBufferMemory
 from langchain_core.messages import HumanMessage, SystemMessage
-from tools.llm import chat_openai, chat_ollama
-from tools.apiUndiksha import apiKtmMhs
+from utils.llm import chat_ollama, chat_openai
+from utils.api_undiksha import cetak_ktm_mhs
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
-from tools.graph_image import get_graph_image
-
-
-class AgentState(TypedDict):
-    context : str
-    question : str
-    question_type : str
-    generalContext : str
-    generalGraderDocs : str
-    generalIsHallucination : str
-    agentsContext : str
-    responseGeneral : str
-    responseKTM : str
-    responseOutOfContext : str
-    responseFinal : str
-    nimMhs: str
-    memory: ConversationBufferMemory
+from utils.graph_image import get_graph_image
+from utils.state import AgentState
 
 
 def questionIdentifierAgent(state: AgentState):
@@ -56,7 +39,7 @@ def generalAgent(state: AgentState):
     info = "--- GENERAL ---"
     print(info+"\n")
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-large"
+    MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -71,13 +54,16 @@ def graderDocsAgent(state: AgentState):
     info = "--- Grader Documents ---"
     print(info+"\n")
     prompt = f"""
-    Ambil informasi yang berkaitan dengan pertanyaan pengguna saja.
-    Namun jangan dijawab dulu pertanyaannya, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
-    Pertanyaan Pengguna: {state["question"]}
+    Anda adalah seorang pemilih konteks handal.
+    - Ambil informasi yang hanya berkaitan dengan pertanyaan.
+    - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
+    - Jangan mengurangi atau melebihi konteks yang diberikan.
+    - Format nya gunakan sesuai format konteks yang dberikan, jangan dirubah.
+    - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
     Konteks: {state["generalContext"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-large"
+    MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -88,9 +74,10 @@ def graderDocsAgent(state: AgentState):
     prompt = prompt_template.format(context=context_text, question=question)
 
     messages = [
-        SystemMessage(content=prompt)
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["question"]),
     ]
-    responseGraderDocsAgent = chat_ollama(messages)
+    responseGraderDocsAgent = chat_openai(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
     print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
@@ -113,7 +100,7 @@ def answerGeneratorAgent(state: AgentState):
     Konteks: {state["generalGraderDocs"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-large"
+    MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -126,10 +113,10 @@ def answerGeneratorAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     state["responseGeneral"] = response
     state["agentsContext"] = response
-    print(state["responseGeneral"])
+    # print(state["responseGeneral"])
     return {"agentsContext": state["responseGeneral"]}
 
 
@@ -139,10 +126,10 @@ def graderHallucinationsAgent(state: AgentState):
     prompt = f"""
     Anda adalah seorang penilai yang menilai apakah hasil didukung oleh sekumpulan fakta yang diambil dari informasi fakta.
     Berikan hanya nilai "true" jika halusinasi atau tidak sesuai fakta atau "false" jika tidak halusinasi atau sesuai fakta.
-    Informasi Fakta: \n\n {state["generalGraderDocs"]} \n\n Hasil: {state["agentsContext"]}
+    Informasi Fakta: \n\n {state["generalGraderDocs"]} \n\n Hasil Yang perlu Di Cek: {state["agentsContext"]}
     """
     VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-large"
+    MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
@@ -155,16 +142,16 @@ def graderHallucinationsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages).strip().lower()
+    response = chat_openai(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
-    print(f"Is hallucination: {is_hallucination}")
+    # print(f"Is hallucination: {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
 
 
 def ktmAgent(state: AgentState):
     info = "--- KTM ---"
-    print(info)
+    print(info+"\n")
     prompt = """
         Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -185,7 +172,7 @@ def ktmAgent(state: AgentState):
     nim_match = re.search(r'\b\d{10}\b', state['question'])
     
     if nim_match:
-        state['nimMhs'] = nim_match.group(0)
+        state['idNIMMhs'] = nim_match.group(0)
         cleaned_response = "printktm"
     else:
         cleaned_response = "incompletenim"
@@ -195,42 +182,44 @@ def ktmAgent(state: AgentState):
     else:
         state['question_type'] += f", {cleaned_response}"
 
-    print(f"question_type: {cleaned_response}\n")
+    # print(f"question_type: {cleaned_response}\n")
     return {"question_type": cleaned_response}
 
 
 def incompleteNimAgent(state: AgentState):
     info = "--- INCOMPLETE NIM ---"
     print(info+"\n")
-    prompt = f"""
-        Anda adalah validator yang hebat dan pintar.
-        Tugas Anda adalah memvalidasi NIM (Nomor Induk Mahasiswa) pada konteks Undiksha (Universitas Pendidikan Ganesha).
+    response = """
         Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         - Format penulisan pesan:
             Cetak KTM [NIM]
         - Contoh penulisan pesan:
-            Cetak KTM 2115XXXXXX
-        Hasilkan respon untuk meminta pengguna kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
+            Cetak KTM XXXXXXXXXX
+        Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
     """
-    messages = [
-        SystemMessage(content=prompt)
-    ]
-    response = chat_ollama(messages)
-    print(response)
-    return response
+    state["responseIncompleteNim"] = response
+    state["agentsContext"] = response
+    # print(state["responseKTM"])
+    return {"agentsContext": state["responseIncompleteNim"]}
 
 
 def printKtmAgent(state: AgentState):
     info = "--- PRINT KTM ---"
     print(info+"\n")
-    nimMhs = state.get('nimMhs', 'NIM tidak ditemukan')
-    apiKtmMhs
+
+    nim_match = re.search(r'\b\d{10}\b', state['question'])
+    if nim_match:
+        state['idNIMMhs'] = nim_match.group(0)
+
+    id_nim_mhs = state.get("idNIMMhs", "ID NIM tidak berhasil didapatkan.")
+    url_nim_mhs = cetak_ktm_mhs(state)
+    
     prompt = f"""
         Anda bertugas untuk memberikan gambar Kartu Tanda Mahasiswa (KTM).
-        - NIM milik pengguna: {nimMhs}
-        - Link gambar KTM milik pengguna: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIiZxRYxUU4ovwZmeSpy_cridLkyqprUE__w&s
-        Hasilkan respon berupa kalimat yang mengatakan ini KTM milikmu dan ini link gambar Kartu Tanda Mahasiswa (KTM).
+        1. NIM milik pengguna: {id_nim_mhs}
+        2. Link gambar KTM milik pengguna: {url_nim_mhs}
+        Hasilkan respon berupa list kalimat tersebut.
     """
     messages = [
         SystemMessage(content=prompt)
@@ -238,17 +227,17 @@ def printKtmAgent(state: AgentState):
     response = chat_ollama(messages)
     state["responseKTM"] = response
     state["agentsContext"] = response
-    print (state["responseKTM"])
+    # print(state["responseKTM"])
     return {"agentsContext": state["responseKTM"]}
 
 
 def outOfContextAgent(state: AgentState):
     info = "--- OUT OF CONTEXT ---"
     print(info+"\n")
-    response = "Pertanyaan tidak relevan dengan konteks kampus."
+    response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
     state["responseOutOfContext"] = response
     state["agentsContext"] = response
-    print (state["responseOutOfContext"])
+    # print (state["responseOutOfContext"])
     return {"agentsContext": state["responseOutOfContext"]}
 
 
@@ -274,6 +263,7 @@ def resultWriterAgent(state: AgentState):
     ]
     response = chat_ollama(messages)
     state["responseFinal"] = response
+    print ("debug:" + state["agentsContext"])
     print (state["responseFinal"])
     return {"responseFinal": state["responseFinal"]}
 
@@ -331,4 +321,4 @@ def build_graph(question):
     get_graph_image(graph)
 
 
-build_graph("kapan jadwal snbp dan saya ingin lihat ktm saya nim 2115101014. selain itu saya ingin bunuh diri.")
+build_graph("kapan jadwal snbp dan saya ingin lihat ktm saya 2115101014. selain itu saya ingin bunuh diri.")

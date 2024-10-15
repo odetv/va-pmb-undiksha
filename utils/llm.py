@@ -29,7 +29,8 @@ def chat_openai(question: str):
 
 
 def embedding_openai():
-    MODEL_EMBEDDING = "text-embedding-3-large"
+    MODEL_EMBEDDING = "text-embedding-3-small"
+    # MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
     return MODEL_EMBEDDING, EMBEDDER
 
@@ -46,11 +47,11 @@ def build_vector():
     CHUNK_OVERLAP = 100
     VECTOR_PATH = "vectordb"
     DATASET_PATH = "assets/datasets"
-    HASH_FILE = "config/file_hashes.json"
-    PARAM_FILE = "config/file_params.json"
+    HASH_FILE = "utils/logfile/file_hashes.json"
+    PARAM_FILE = "utils/logfile/file_params.json"
 
-    if not os.path.exists('config'):
-        os.makedirs('config')
+    if not os.path.exists('utils/logfile'):
+        os.makedirs('utils/logfile')
 
     # Fungsi untuk menghitung hash MD5 dari file yang diberikan
     def calculate_md5(file_path):
