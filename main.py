@@ -1,17 +1,33 @@
 import re
+import time
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
-from utils.llm import chat_ollama, chat_openai
+from utils.llm import chat_ollama, chat_openai, chat_groq
 from utils.api_undiksha import cetak_ktm_mhs
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
-from utils.graph_image import get_graph_image
-from utils.state import AgentState
+from utils.create_graph_image import get_graph_image
+from utils.agent_state import AgentState
 
 
+total_execution_time = 0.0
+def time_check(func):
+    def wrapper(state: AgentState):
+        global total_execution_time
+        start_time = time.time()
+        result = func(state)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        total_execution_time += execution_time
+        print(f"DEBUG: {func.__name__} took {execution_time:.4f} seconds\n\n")
+        return result
+    return wrapper
+
+
+@time_check
 def questionIdentifierAgent(state: AgentState):
-    info = "--- QUESTION IDENTIFIER ---"
+    info = "\n--- AGENT QUESTION IDENTIFIER ---"
     print(info)
     prompt = """
         Anda adalah seoarang analis pertanyaan pengguna.
@@ -27,17 +43,18 @@ def questionIdentifierAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_ollama(messages)
+    response = chat_groq(messages)
     cleaned_response = response.strip().lower()
     print("Pertanyaan:", state["question"])
-    print(f"question_type: {cleaned_response}\n")
+    print(f"question_type: {cleaned_response}")
     state["question_type"] = cleaned_response
     return state
 
 
+@time_check
 def generalAgent(state: AgentState):
-    info = "--- GENERAL ---"
-    print(info+"\n")
+    info = "\n--- AGENT GENERAL ---"
+    print(info)
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
@@ -46,13 +63,14 @@ def generalAgent(state: AgentState):
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
     state["generalContext"] = context
-    print (state["generalContext"])
+    # print (state["generalContext"])
     return {"generalContext": state["generalContext"]}
 
 
+@time_check
 def graderDocsAgent(state: AgentState):
-    info = "--- Grader Documents ---"
-    print(info+"\n")
+    info = "\n--- Agent Grader Documents ---"
+    print(info)
     prompt = f"""
     Anda adalah seorang pemilih konteks handal.
     - Ambil informasi yang hanya berkaitan dengan pertanyaan.
@@ -79,13 +97,14 @@ def graderDocsAgent(state: AgentState):
     ]
     responseGraderDocsAgent = chat_openai(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
-    print(state["generalGraderDocs"])
+    # print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 
+@time_check
 def answerGeneratorAgent(state: AgentState):
-    info = "--- Answer Generator ---"
-    print(info+"\n")
+    info = "\n--- Agent Answer Generator ---"
+    print(info)
     prompt = f"""
     Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
     - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
@@ -113,20 +132,22 @@ def answerGeneratorAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_groq(messages)
     state["responseGeneral"] = response
     state["agentsContext"] = response
     # print(state["responseGeneral"])
     return {"agentsContext": state["responseGeneral"]}
 
 
+@time_check
 def graderHallucinationsAgent(state: AgentState):
-    info = "--- Grader Hallucinations ---"
-    print(info+"\n")
+    info = "\n--- Agent Grader Hallucinations ---"
+    print(info)
     prompt = f"""
     Anda adalah seorang penilai yang menilai apakah hasil didukung oleh sekumpulan fakta yang diambil dari informasi fakta.
-    Berikan hanya nilai "true" jika halusinasi atau tidak sesuai fakta atau "false" jika tidak halusinasi atau sesuai fakta.
-    Informasi Fakta: \n\n {state["generalGraderDocs"]} \n\n Hasil Yang perlu Di Cek: {state["agentsContext"]}
+    - Berikan hanya nilai "true" jika halusinasi atau tidak sesuai fakta atau "false" jika tidak halusinasi atau sesuai fakta.
+    - Informasi fakta: {state["generalGraderDocs"]}
+    - Hasil yang perlu dibandingkan dengan informasi fakta: {state["agentsContext"]}
     """
     VECTOR_PATH = "vectordb"
     MODEL_EMBEDDING = "text-embedding-3-small"
@@ -142,16 +163,17 @@ def graderHallucinationsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages).strip().lower()
+    response = chat_ollama(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
-    # print(f"Is hallucination: {is_hallucination}")
+    print(f"Is hallucination? {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
 
 
+@time_check
 def ktmAgent(state: AgentState):
-    info = "--- KTM ---"
-    print(info+"\n")
+    info = "\n--- AGENT KTM ---"
+    print(info)
     prompt = """
         Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -166,7 +188,7 @@ def ktmAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_ollama(messages)
+    response = chat_groq(messages)
     cleaned_response = response.strip().lower()
 
     nim_match = re.search(r'\b\d{10}\b', state['question'])
@@ -186,9 +208,10 @@ def ktmAgent(state: AgentState):
     return {"question_type": cleaned_response}
 
 
+@time_check
 def incompleteNimAgent(state: AgentState):
-    info = "--- INCOMPLETE NIM ---"
-    print(info+"\n")
+    info = "\n--- Agent Incomplete NIM ---"
+    print(info)
     response = """
         Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
@@ -204,9 +227,10 @@ def incompleteNimAgent(state: AgentState):
     return {"agentsContext": state["responseIncompleteNim"]}
 
 
+@time_check
 def printKtmAgent(state: AgentState):
-    info = "--- PRINT KTM ---"
-    print(info+"\n")
+    info = "\n--- Agent Print KTM ---"
+    print(info)
 
     nim_match = re.search(r'\b\d{10}\b', state['question'])
     if nim_match:
@@ -219,21 +243,22 @@ def printKtmAgent(state: AgentState):
         Anda bertugas untuk memberikan gambar Kartu Tanda Mahasiswa (KTM).
         1. NIM milik pengguna: {id_nim_mhs}
         2. Link gambar KTM milik pengguna: {url_nim_mhs}
-        Hasilkan respon berupa list kalimat tersebut.
+        Hasilkan respon berupa list kalimat tersebut untuk disampaikan NIM dan Link nya ke pengguna.
     """
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_groq(messages)
     state["responseKTM"] = response
     state["agentsContext"] = response
     # print(state["responseKTM"])
     return {"agentsContext": state["responseKTM"]}
 
 
+@time_check
 def outOfContextAgent(state: AgentState):
-    info = "--- OUT OF CONTEXT ---"
-    print(info+"\n")
+    info = "\n--- AGENT OUT OF CONTEXT ---"
+    print(info)
     response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
     state["responseOutOfContext"] = response
     state["agentsContext"] = response
@@ -241,33 +266,29 @@ def outOfContextAgent(state: AgentState):
     return {"agentsContext": state["responseOutOfContext"]}
 
 
+@time_check
 def resultWriterAgent(state: AgentState):
-    info = "--- RESULT WRITER AGENT ---"
-    print(info+"\n")
+    info = "\n--- AGENT RESULT WRITER AGENT ---"
+    print(info)
     prompt = f"""
-        Berikut pedoman yang harus diikuti untuk memberikan jawaban:
+        Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
         - Awali dengan "Salam Harmoni🙏"
         - Anda adalah penulis yang hebat dan pintar.
-        - Tugas Anda adalah merangkai jawaban dengan lengkap dan jelas apa adanya berdasarkan informasi yang diberikan.
-        - Jangan mengarang jawaban dari informasi yang diberikan.
+        - Tugas Anda adalah merangkai informasi secara lengkap dan jelas serta apa adanya sesuai informasi yang diberikan.
+        - Jangan mengarang jawaban dari informasi yang diberikan sehingga semua poin penting tersampaikan dan tidak ada yang terlewat.
         Berikut adalah informasinya:
         {state["agentsContext"]}
-        - Susun ulang informasi tersebut dengan lengkap dan jelas apa adanya sehingga mudah dipahami.
-        - Pastikan semua poin penting tersampaikan dan tidak ada yang terlewat, jangan mengatakan proses penyusunan ulang ini.
-        - Gunakan penomoran, URL, link atau yang lainnya jika diperlukan.
-        - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
-        - Jangan sampaikan pedoman ini kepada pengguna, gunakan pedoman ini hanya untuk memberikan jawaban yang sesuai konteks.
     """
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     state["responseFinal"] = response
-    print ("debug:" + state["agentsContext"])
     print (state["responseFinal"])
     return {"responseFinal": state["responseFinal"]}
 
 
+@time_check
 def build_graph(question):
     workflow = StateGraph(AgentState)
     initial_state = questionIdentifierAgent({"question": question})
@@ -321,4 +342,5 @@ def build_graph(question):
     get_graph_image(graph)
 
 
-build_graph("kapan jadwal snbp dan saya ingin lihat ktm saya 2115101014. selain itu saya ingin bunuh diri.")
+build_graph("siapa rektor undiksha dan bagaimana tahapan jadwal SNBP undiksha? Saya juga ingin melihat ktm dengan nim 2115101014 dan gimana caranya agar kaya raya?")
+print(f"DEBUG: Total execution time: {total_execution_time:.4f} seconds")
