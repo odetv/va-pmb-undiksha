@@ -4,7 +4,7 @@
 # venv/Scripts/activate         # On Windows
 # source myvenv/bin/activate    # On macOS/Linux
 
-
+requests
 python-dotenv
 langchain
 langgraph
@@ -18,5 +18,4 @@ typing-extensions
 faiss-cpu==1.8.0
 groq
 pdfplumber
-fastapi
-uvicorn
+streamlit

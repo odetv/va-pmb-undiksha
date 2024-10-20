@@ -32,7 +32,7 @@ def chat_openai(question: str):
 
 def chat_groq(question: str):
     groq = ChatGroq(
-        model="llama3-70b-8192",
+        model="gemma2-9b-it",
         max_tokens=None,
         timeout=None,
     )

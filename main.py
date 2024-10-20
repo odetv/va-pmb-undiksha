@@ -43,7 +43,7 @@ def questionIdentifierAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_groq(messages)
+    response = chat_ollama(messages)
     cleaned_response = response.strip().lower()
     print("Pertanyaan:", state["question"])
     print(f"question_type: {cleaned_response}")
@@ -63,6 +63,7 @@ def generalAgent(state: AgentState):
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
     state["generalContext"] = context
+    state["finishedAgents"].add("general")
     # print (state["generalContext"])
     return {"generalContext": state["generalContext"]}
 
@@ -80,23 +81,13 @@ def graderDocsAgent(state: AgentState):
     - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
     Konteks: {state["generalContext"]}
     """
-    VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
-    EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
-    question = state["question"]
-    vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
-    retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
-    context_text = "\n".join([doc.page_content for doc, _score in retriever])
-
-    prompt_template = ChatPromptTemplate.from_template(prompt)
-    prompt = prompt_template.format(context=context_text, question=question)
-
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    responseGraderDocsAgent = chat_openai(messages)
+    responseGraderDocsAgent = chat_groq(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
+    state["finishedAgents"].add("graderdocs")
     # print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
@@ -118,25 +109,20 @@ def answerGeneratorAgent(state: AgentState):
     Pertanyaan Pengguna: {state["question"]}
     Konteks: {state["generalGraderDocs"]}
     """
-    VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
-    EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
-    question = state["question"]
-    vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
-    retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
-    context_text = "\n".join([doc.page_content for doc, _score in retriever])
-
-    prompt_template = ChatPromptTemplate.from_template(prompt)
-    prompt = prompt_template.format(context=context_text, question=question)
-
     messages = [
         SystemMessage(content=prompt)
     ]
     response = chat_groq(messages)
+
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
     state["responseGeneral"] = response
-    state["agentsContext"] = response
+    state["finishedAgents"].add("answergenerator")
     # print(state["responseGeneral"])
-    return {"agentsContext": state["responseGeneral"]}
+    return {"agentsContext": state["agentsContext"]}
 
 
 @time_check
@@ -149,23 +135,13 @@ def graderHallucinationsAgent(state: AgentState):
     - Informasi fakta: {state["generalGraderDocs"]}
     - Hasil yang perlu dibandingkan dengan informasi fakta: {state["agentsContext"]}
     """
-    VECTOR_PATH = "vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
-    EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
-    question = state["question"]
-    vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
-    retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
-    context_text = "\n".join([doc.page_content for doc, _score in retriever])
-
-    prompt_template = ChatPromptTemplate.from_template(prompt)
-    prompt = prompt_template.format(context=context_text, question=question)
-
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages).strip().lower()
+    response = chat_groq(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
+    state["finishedAgents"].add("graderhallucinations")
     print(f"Is hallucination? {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
 
@@ -204,6 +180,7 @@ def ktmAgent(state: AgentState):
     else:
         state['question_type'] += f", {cleaned_response}"
 
+    state["finishedAgents"].add("ktm") 
     # print(f"question_type: {cleaned_response}\n")
     return {"question_type": cleaned_response}
 
@@ -221,10 +198,15 @@ def incompleteNimAgent(state: AgentState):
             Cetak KTM XXXXXXXXXX
         Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
     """
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
     state["responseIncompleteNim"] = response
-    state["agentsContext"] = response
+    state["finishedAgents"].add("incompletenim")
     # print(state["responseKTM"])
-    return {"agentsContext": state["responseIncompleteNim"]}
+    return {"agentsContext": state["agentsContext"]}
 
 
 @time_check
@@ -237,22 +219,23 @@ def printKtmAgent(state: AgentState):
         state['idNIMMhs'] = nim_match.group(0)
 
     id_nim_mhs = state.get("idNIMMhs", "ID NIM tidak berhasil didapatkan.")
-    url_nim_mhs = cetak_ktm_mhs(state)
+    url_ktm_mhs = cetak_ktm_mhs(state)
     
-    prompt = f"""
-        Anda bertugas untuk memberikan gambar Kartu Tanda Mahasiswa (KTM).
-        1. NIM milik pengguna: {id_nim_mhs}
-        2. Link gambar KTM milik pengguna: {url_nim_mhs}
-        Hasilkan respon berupa list kalimat tersebut untuk disampaikan NIM dan Link nya ke pengguna.
+    response = f"""
+        Berikut informasi Kartu Tanda Mahasiswa (KTM) Anda.
+        - NIM: {id_nim_mhs}
+        - Link: {url_ktm_mhs}
     """
-    messages = [
-        SystemMessage(content=prompt)
-    ]
-    response = chat_groq(messages)
+
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
     state["responseKTM"] = response
-    state["agentsContext"] = response
+    state["finishedAgents"].add("printktm")
     # print(state["responseKTM"])
-    return {"agentsContext": state["responseKTM"]}
+    return {"agentsContext": state["agentsContext"]}
 
 
 @time_check
@@ -260,29 +243,51 @@ def outOfContextAgent(state: AgentState):
     info = "\n--- AGENT OUT OF CONTEXT ---"
     print(info)
     response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
+
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
     state["responseOutOfContext"] = response
-    state["agentsContext"] = response
+    state["finishedAgents"].add("outofcontext")
     # print (state["responseOutOfContext"])
-    return {"agentsContext": state["responseOutOfContext"]}
+    return {"agentsContext": state["agentsContext"]}
 
 
 @time_check
 def resultWriterAgent(state: AgentState):
+    expected_agents_count = len(state["finishedAgents"])
+    total_agents = 0
+
+    if "general" in state["finishedAgents"]:
+        total_agents =+ 3
+    if "ktm" in state["finishedAgents"]:
+        total_agents += 2
+    if "outofcontext" in state["finishedAgents"]:
+        total_agents += 1
+    
+    print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
+    print(f"DEBUG: expected_agents_count = {expected_agents_count}, total_agents = {total_agents}")
+
+    if expected_agents_count < total_agents:
+        print("Menunggu agen lain untuk menyelesaikan...")
+        return None
+    
     info = "\n--- AGENT RESULT WRITER AGENT ---"
     print(info)
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
         - Awali dengan "Salam Harmoni🙏"
         - Anda adalah penulis yang hebat dan pintar.
-        - Tugas Anda adalah merangkai informasi secara lengkap dan jelas serta apa adanya sesuai informasi yang diberikan.
-        - Jangan mengarang jawaban dari informasi yang diberikan sehingga semua poin penting tersampaikan dan tidak ada yang terlewat.
+        - Tugas Anda adalah merangkai informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         Berikut adalah informasinya:
         {state["agentsContext"]}
     """
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_openai(messages)
+    response = chat_ollama(messages)
     state["responseFinal"] = response
     print (state["responseFinal"])
     return {"responseFinal": state["responseFinal"]}
@@ -291,7 +296,7 @@ def resultWriterAgent(state: AgentState):
 @time_check
 def build_graph(question):
     workflow = StateGraph(AgentState)
-    initial_state = questionIdentifierAgent({"question": question})
+    initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
     workflow.add_node("questionIdentifier", lambda x: initial_state)
     workflow.add_node("resultWriter", resultWriterAgent)
@@ -338,9 +343,15 @@ def build_graph(question):
     workflow.add_edge("resultWriter", END)
 
     graph = workflow.compile()
-    graph.invoke({'question': question})
+    result = graph.invoke({'question': question})
+
+    final_response = result.get("responseFinal")
+    
     get_graph_image(graph)
 
+    return final_response
 
-build_graph("siapa rektor undiksha dan bagaimana tahapan jadwal SNBP undiksha? Saya juga ingin melihat ktm dengan nim 2115101014 dan gimana caranya agar kaya raya?")
-print(f"DEBUG: Total execution time: {total_execution_time:.4f} seconds")
+
+# DEBUG
+# build_graph("siapa rektor undiksha? saya ingin cetak ktm 2115101014, dan siapa bupati buleleng?")
+# print(f"DEBUG: Total execution time: {total_execution_time:.4f} seconds")

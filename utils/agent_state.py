@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import List, Set, TypedDict
 from langchain.memory import ConversationBufferMemory
 
 class AgentState(TypedDict):
@@ -14,6 +14,8 @@ class AgentState(TypedDict):
     responseIncompleteNim: str
     responseOutOfContext: str
     responseFinal: str
+    finishedAgents: List[str]
     idNIMMhs: str
-    urlNIMMhs: str
+    urlKTMMhs: str
     memory: ConversationBufferMemory
+    finishedAgents: Set[str]
