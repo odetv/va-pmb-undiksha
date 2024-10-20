@@ -85,7 +85,7 @@ def graderDocsAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    responseGraderDocsAgent = chat_groq(messages)
+    responseGraderDocsAgent = chat_ollama(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderdocs")
     # print(state["generalGraderDocs"])
@@ -112,7 +112,7 @@ def answerGeneratorAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_groq(messages)
+    response = chat_ollama(messages)
 
     if "agentsContext" in state and state["agentsContext"]:
         state["agentsContext"] += f"\n{response}"
@@ -134,11 +134,12 @@ def graderHallucinationsAgent(state: AgentState):
     - Berikan hanya nilai "true" jika halusinasi atau tidak sesuai fakta atau "false" jika tidak halusinasi atau sesuai fakta.
     - Informasi fakta: {state["generalGraderDocs"]}
     - Hasil yang perlu dibandingkan dengan informasi fakta: {state["agentsContext"]}
+    - Jika hasil yang perlu dibandingkan dengan informasi fakta ada yang sudah berkaitan maka itu sesuai.
     """
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_groq(messages).strip().lower()
+    response = chat_ollama(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
     state["finishedAgents"].add("graderhallucinations")
@@ -164,7 +165,7 @@ def ktmAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_groq(messages)
+    response = chat_ollama(messages)
     cleaned_response = response.strip().lower()
 
     nim_match = re.search(r'\b\d{10}\b', state['question'])
@@ -279,7 +280,6 @@ def resultWriterAgent(state: AgentState):
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
         - Awali dengan "Salam Harmoni🙏"
-        - Anda adalah penulis yang hebat dan pintar.
         - Tugas Anda adalah merangkai informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         Berikut adalah informasinya:
         {state["agentsContext"]}

@@ -19,8 +19,9 @@ def show_example_questions():
                 st.session_state.user_question = question
 
 def main():
-    st.title("Virtual Assistant PMB Undiksha")
-    st.write("Salam Harmoni🙏 Silahkan bertanya😊")
+    st.sidebar.title("Virtual Assistant PMB Undiksha")
+    st.sidebar.image("assets\images\logo.webp", use_column_width=True)
+    st.sidebar.write("Selamat datang di Virtual Assistant PMB Undiksha! Kami siap membantu Anda, silahkan bertanya😊")
 
     show_example_questions()
 
