@@ -4,7 +4,7 @@ assets/datasets
 eval/.deepeval
 eval/.deepeval-cache.json
 utils/logfile
+graph
 vectordb
 venv
 .env
-graph/
