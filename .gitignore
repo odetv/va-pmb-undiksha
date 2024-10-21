@@ -7,3 +7,4 @@ utils/logfile
 vectordb
 venv
 .env
+graph/
