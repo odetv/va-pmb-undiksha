@@ -3,7 +3,7 @@ import time
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
-from utils.llm import chat_ollama, chat_ollama, chat_groq
+from utils.llm import chat_ollama, chat_openai, chat_groq
 from utils.api_undiksha import cetak_ktm_mhs
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.vectorstores import FAISS
@@ -40,7 +40,7 @@ def questionIdentifierAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     cleaned_response = response.strip().lower()
     print("Pertanyaan:", state["question"])
     print(f"question_type: {cleaned_response}")
@@ -82,7 +82,7 @@ def graderDocsAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    responseGraderDocsAgent = chat_ollama(messages)
+    responseGraderDocsAgent = chat_openai(messages)
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderdocs")
     # print(state["generalGraderDocs"])
@@ -110,7 +110,7 @@ def answerGeneratorAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
 
     if "agentsContext" in state and state["agentsContext"]:
         state["agentsContext"] += f"\n{response}"
@@ -136,7 +136,7 @@ def graderHallucinationsAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages).strip().lower()
+    response = chat_openai(messages).strip().lower()
     is_hallucination = response == "true"
     state["generalIsHallucination"] = is_hallucination
     state["finishedAgents"].add("graderhallucinations")
@@ -164,7 +164,7 @@ def ktmAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     cleaned_response = response.strip().lower()
 
     nim_match = re.search(r"\b\d{10}\b", state["question"])
@@ -288,7 +288,7 @@ def resultWriterAgent(state: AgentState):
     messages = [
         SystemMessage(content=prompt)
     ]
-    response = chat_ollama(messages)
+    response = chat_openai(messages)
     state["responseFinal"] = response
     print (state["agentsContext"])
     print (state["responseFinal"])

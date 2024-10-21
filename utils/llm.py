@@ -24,21 +24,21 @@ def chat_ollama(question: str, model = "gemma2"):
     return result
 
 
-def chat_openai(question: str):
-    openai = ChatOpenAI(api_key=openai_api_key, model="gpt-4o-mini", temperature=0, streaming=True)
-    result = openai.invoke(question).content if hasattr(openai.invoke(question), "content") else openai.invoke(question)
-    return result
-
-
 # def chat_openai(question: str):
 #     openai = ChatOpenAI(api_key=openai_api_key, model="gpt-4o-mini", temperature=0, streaming=True)
-#     response = ""
-#     stream_response = openai.stream(question)
-#     for chunk in stream_response:
-#         token = chunk.content
-#         response += token
-#         print(token, end="", flush=True)
-#     return response
+#     result = openai.invoke(question).content if hasattr(openai.invoke(question), "content") else openai.invoke(question)
+#     return result
+
+
+def chat_openai(question: str):
+    openai = ChatOpenAI(api_key=openai_api_key, model="gpt-4o-mini", temperature=0, streaming=True)
+    response = ""
+    stream_response = openai.stream(question)
+    for chunk in stream_response:
+        token = chunk.content
+        response += token
+        print(token, end="", flush=True)
+    return response
 
 
 def chat_groq(question: str):
