@@ -1,7 +1,6 @@
 import streamlit as st
 import re
 from main import build_graph
-from utils.llm import build_vector
 import os
 import pandas as pd
 import pdfplumber
@@ -63,7 +62,7 @@ def raw_data():
                     if documents:
                         st.write("Daftar Dokumen yang Siap Diproses:")
                         document_df = pd.DataFrame({"No": range(1, len(documents) + 1), "Nama Dokumen": documents})
-                        st.dataframe(document_df)
+                        st.table(document_df)
                         st.success("Proses load dokumen selesai", icon="✅")
                     else:
                         st.warning("Tidak ada dokumen yang ditemukan untuk diproses.")
@@ -93,7 +92,7 @@ def raw_data():
                         chunk_size=CHUNK_SIZE,
                         chunk_overlap=CHUNK_OVERLAP,
                         length_function=len,
-                        separators=["\n\n", "\n", " ", ""]
+                        separators=[" "]
                     )
                     chunks = text_splitter.split_documents(documents)
 
@@ -110,7 +109,7 @@ def raw_data():
                         })
 
                     chunk_df = pd.DataFrame(chunk_data)
-                    st.dataframe(chunk_df)
+                    st.table(chunk_df)
                     st.success("Proses chunking selesai", icon="✅")
             except Exception as e:
                 st.error(f"Terjadi kesalahan pada proses Chunking: {str(e)}", icon="❌")
@@ -134,7 +133,7 @@ def raw_data():
 
                     embedding_df['Embedding'] = embedding_df['Embedding'].apply(lambda x: str(x[:5]) + " ...")  # Menampilkan sebagian embedding
                     
-                    st.dataframe(embedding_df)
+                    st.table(embedding_df)
 
                     st.success("Proses embeddings selesai untuk 5 chunk pertama", icon="✅")
             except Exception as e:

@@ -61,7 +61,7 @@ def generalAgent(state: AgentState):
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
     state["generalContext"] = context
     state["finishedAgents"].add("general")
-    # print (state["generalContext"])
+    # print(context)
     return {"generalContext": state["generalContext"]}
 
 
