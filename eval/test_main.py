@@ -9,7 +9,6 @@ def test_answer_relevancy():
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
     test_case = LLMTestCase(
         input="Siapa rektor undiksha?",
-        # Replace this with the actual output of your LLM application
         actual_output="Prof. Dr. I Wayan Lasmawan, M.Pd",
         retrieval_context=["{retriever}"]
     )

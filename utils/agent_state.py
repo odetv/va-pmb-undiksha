@@ -1,6 +1,7 @@
 from typing import List, Set, TypedDict
 from langchain.memory import ConversationBufferMemory
 
+
 class AgentState(TypedDict):
     context: str
     question: str
@@ -8,14 +9,19 @@ class AgentState(TypedDict):
     generalContext: str
     generalGraderDocs: str
     generalIsHallucination: str
-    agentsContext: str
     responseGeneral: str
+    checkKTM: str
     responseKTM: str
     responseIncompleteNim: str
+    checkKelulusan: str
+    responseKelulusan: str
+    responseIncompleteInfoKelulusan: str
     responseOutOfContext: str
     responseFinal: str
-    finishedAgents: List[str]
     idNIMMhs: str
     urlKTMMhs: str
-    memory: ConversationBufferMemory
+    noPendaftaran: str
+    pinPendaftaran: str
     finishedAgents: Set[str]
+    agentsContext: str
+    memory: ConversationBufferMemory

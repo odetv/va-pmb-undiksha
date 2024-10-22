@@ -1,25 +1,13 @@
 import re
-import time
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_community.vectorstores import FAISS
 from utils.llm import chat_ollama, chat_openai, chat_groq
 from utils.api_undiksha import cetak_ktm_mhs
-from langchain.prompts import ChatPromptTemplate
-from langchain_community.vectorstores import FAISS
 from utils.create_graph_image import get_graph_image
 from utils.agent_state import AgentState
-
-
-def time_check(func):
-    def wrapper(state: AgentState):
-        start_time = time.time()
-        result = func(state)
-        end_time = time.time()
-        execution_time = end_time - start_time
-        print(f"DEBUG: {func.__name__} took {execution_time:.4f} seconds\n\n")
-        return result
-    return wrapper
+from utils.debug_time import time_check
 
 
 @time_check
@@ -32,19 +20,19 @@ def questionIdentifierAgent(state: AgentState):
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 3 konteks pertanyaan yang diajukan:
         - GENERAL - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), dan perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha).
-        - KTM - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM).
+        - KELULUSAN - Pertanyaan terkait pengecekan status kelulusan SMBJM bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
+        - KTM - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
         - OUTOFCONTEXT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
-        Hasilkan hanya sesuai kata (GENERAL, KTM, OUTOFCONTEXT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
+        Hasilkan hanya sesuai kata (GENERAL, KELULUSAN, KTM, OUTOFCONTEXT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
     """
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_openai(messages)
-    cleaned_response = response.strip().lower()
+    response = chat_openai(messages).strip().lower()
     print("Pertanyaan:", state["question"])
-    print(f"question_type: {cleaned_response}")
-    state["question_type"] = cleaned_response
+    print(f"question_type: {response}")
+    state["question_type"] = response
     return state
 
 
@@ -52,7 +40,7 @@ def questionIdentifierAgent(state: AgentState):
 def generalAgent(state: AgentState):
     info = "\n--- AGENT GENERAL ---"
     print(info)
-    VECTOR_PATH = "vectordb"
+    VECTOR_PATH = "src/vectordb"
     MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["question"]
@@ -147,6 +135,104 @@ def graderHallucinationsAgent(state: AgentState):
 
 
 @time_check
+def kelulusanAgent(state: AgentState):
+    info = "\n--- AGENT CEK KELULUSAN SMBJM ---"
+    print(info)
+    prompt = """
+        Anda adalah seoarang analis informasi kelulusan SMBJM.
+        Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
+        Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
+        Ada 2 konteks pertanyaan yang diajukan:
+        - TRUE - Jika pengguna menyertakan Nomor Pendaftaran dan PIN.
+        - FALSE - Jika pengguna tidak menyertakan Nomor Pendaftaran dan PIN.
+        Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
+    """
+    messages = [
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["question"]),
+    ]
+    response = chat_openai(messages).strip().lower()
+
+    noPendaftaran_match = re.search(r"\b\d{10}\b", state["question"])
+    pinPendaftaran_match = re.search(r"\b\d{6}\b", state["question"])
+    
+    if noPendaftaran_match and pinPendaftaran_match:
+        state["noPendaftaran"] = noPendaftaran_match.group(0)
+        state["pinPendaftaran"] = pinPendaftaran_match.group(0)
+        response = "true"
+    else:
+        response = "false"
+
+    is_complete = response == "true"
+    state["checkKelulusan"] = is_complete
+    state["finishedAgents"].add("kelulusan") 
+    print(f"Lengkap? {is_complete}")
+    return {"checkKelulusan": state["checkKelulusan"]}
+
+
+@time_check
+def incompleteInfoKelulusanAgent(state: AgentState):
+    info = "\n--- Agent Incomplete Kelulusan SMBJM ---"
+    print(info)
+    response = """
+        Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan PIN Pendaftaran SMBJM yang diberikan.
+        - Format penulisan pesan:
+            Nomor Pendaftaran [NO]
+            PIN Pendaftaran [PIN]
+        - Contoh penulisan pesan:
+            Nomor Pendaftaran 1234567890
+            PIN Pendaftaran 010203
+        Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
+    """
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
+    state["responseIncompleteInfoKelulusan"] = response
+    state["finishedAgents"].add("incompleteinfokelulusan")
+    # print(state["responseIncompleteInfoKelulusan"])
+    return {"agentsContext": state["agentsContext"]}
+
+
+@time_check
+def infoKelulusanAgent(state: AgentState):
+    info = "\n--- Agent Info Kelulusan SMBJM ---"
+    print(info)
+
+    noPendaftaran_match = re.search(r"\b\d{10}\b", state["question"])
+    pinPendaftaran_match = re.search(r"\b\d{6}\b", state["question"])
+    state["noPendaftaran"] = noPendaftaran_match.group(0)
+    state["pinPendaftaran"] = pinPendaftaran_match.group(0)
+
+    nama_peserta = "Kadek Gembul"
+    no_pendaftaran = state.get("noPendaftaran", "Nomor Pendaftaran tidak berhasil didapatkan.")
+    jalur_pendaftaran = "SMBJM-UTBK"
+    pilihan_daftar = "Ilmu Komputer"
+    status_kelulusan = "LULUS"
+    
+    response = f"""
+        Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
+        - Nama Peserta: {nama_peserta}
+        - Nomor Pendaftaran: {no_pendaftaran}
+        - Jalur: {jalur_pendaftaran}
+        - Pilihan: {pilihan_daftar}
+        - Status Kelulusan: {status_kelulusan}
+        Jika lulus berikan ucapan selamat, jika tidak berikan motivasi dan ucapan terima kasih.
+    """
+
+    if "agentsContext" in state and state["agentsContext"]:
+        state["agentsContext"] += f"\n{response}"
+    else:
+        state["agentsContext"] = response
+
+    state["responseKelulusan"] = response
+    state["finishedAgents"].add("infokelulusan")
+    # print(state["responseKelulusan"])
+    return {"agentsContext": state["agentsContext"]}
+
+
+@time_check
 def ktmAgent(state: AgentState):
     info = "\n--- AGENT KTM ---"
     print(info)
@@ -156,33 +242,28 @@ def ktmAgent(state: AgentState):
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 2 konteks pertanyaan yang diajukan:
-        - INCOMPLETENIM - Jika pengguna tidak menyertakan nomor NIM (Nomor Induk Mahasiswa) dan tidak valid.
-        - PRINTKTM - Jika pengguna menyertakan NIM (Nomor Induk Mahasiswa).
-        Hasilkan hanya 1 sesuai kata (INCOMPLETENIM, PRINTKTM).
+        - TRUE - Jika pengguna menyertakan NIM (Nomor Induk Mahasiswa).
+        - FALSE - Jika pengguna tidak menyertakan nomor NIM (Nomor Induk Mahasiswa) dan tidak valid.
+        Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
     """
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
-    response = chat_openai(messages)
-    cleaned_response = response.strip().lower()
+    response = chat_openai(messages).strip().lower()
 
     nim_match = re.search(r"\b\d{10}\b", state["question"])
-    
     if nim_match:
         state["idNIMMhs"] = nim_match.group(0)
-        cleaned_response = "printktm"
+        response = "true"
     else:
-        cleaned_response = "incompletenim"
+        response = "false"
+    is_complete = response == "true"
 
-    if "question_type" not in state:
-        state["question_type"] = cleaned_response
-    else:
-        state["question_type"] += f", {cleaned_response}"
-
+    state["checkKTM"] = is_complete
     state["finishedAgents"].add("ktm") 
-    # print(f"question_type: {cleaned_response}\n")
-    return {"question_type": cleaned_response}
+    print(f"Lengkap? {is_complete}")
+    return {"checkKTM": state["checkKTM"]}
 
 
 @time_check
@@ -193,9 +274,9 @@ def incompleteNimAgent(state: AgentState):
         Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         - Format penulisan pesan:
-            Cetak KTM [NIM]
+            KTM [NIM]
         - Contoh penulisan pesan:
-            Cetak KTM XXXXXXXXXX
+            KTM XXXXXXXXXX
         Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
     """
     if "agentsContext" in state and state["agentsContext"]:
@@ -205,7 +286,7 @@ def incompleteNimAgent(state: AgentState):
 
     state["responseIncompleteNim"] = response
     state["finishedAgents"].add("incompletenim")
-    # print(state["responseKTM"])
+    # print(state["responseIncompleteNim"])
     return {"agentsContext": state["agentsContext"]}
 
 
@@ -215,9 +296,7 @@ def printKtmAgent(state: AgentState):
     print(info)
 
     nim_match = re.search(r"\b\d{10}\b", state["question"])
-    if nim_match:
-        state["idNIMMhs"] = nim_match.group(0)
-
+    state["idNIMMhs"] = nim_match.group(0)
     id_nim_mhs = state.get("idNIMMhs", "ID NIM tidak berhasil didapatkan.")
     url_ktm_mhs = cetak_ktm_mhs(state)
     
@@ -263,6 +342,8 @@ def resultWriterAgent(state: AgentState):
 
     if "general" in state["finishedAgents"]:
         total_agents =+ 3
+    if "kelulusan" in state["finishedAgents"]:
+        total_agents += 2
     if "ktm" in state["finishedAgents"]:
         total_agents += 2
     if "outofcontext" in state["finishedAgents"]:
@@ -321,6 +402,22 @@ def build_graph(question):
             }
         )
 
+    if "kelulusan" in context:
+        workflow.add_node("kelulusan", kelulusanAgent)
+        workflow.add_node("incompleteinfokelulusan", incompleteInfoKelulusanAgent)
+        workflow.add_node("infokelulusan", infoKelulusanAgent)
+        workflow.add_edge("questionIdentifier", "kelulusan")
+        workflow.add_conditional_edges(
+            "kelulusan",
+            lambda state: state["checkKelulusan"],
+            {
+                True: "infokelulusan",
+                False: "incompleteinfokelulusan"
+            }
+        )
+        workflow.add_edge("incompleteinfokelulusan", "resultWriter")
+        workflow.add_edge("infokelulusan", "resultWriter")
+
     if "ktm" in context:
         workflow.add_node("ktm", ktmAgent)
         workflow.add_node("incompletenim", incompleteNimAgent)
@@ -328,10 +425,10 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier", "ktm")
         workflow.add_conditional_edges(
             "ktm",
-            lambda state: state["question_type"],
+            lambda state: state["checkKTM"],
             {
-                "incompletenim": "incompletenim",
-                "printktm": "printktm"
+                True: "printktm",
+                False: "incompletenim"
             }
         )
         workflow.add_edge("incompletenim", "resultWriter")
@@ -343,16 +440,13 @@ def build_graph(question):
         workflow.add_edge("outofcontext", "resultWriter")
 
     workflow.add_edge("resultWriter", END)
-
     graph = workflow.compile()
     result = graph.invoke({"question": question})
-
-    final_response = result.get("responseFinal")
-    
+    response = result.get("responseFinal")
     get_graph_image(graph)
 
-    return final_response
+    return response
 
 
 # DEBUG
-# build_graph("siapa rektor undiksha? saya ingin cetak ktm 2115101014, dan siapa bupati buleleng?")
+build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Siapa bupati buleleng?")

@@ -11,12 +11,14 @@ load_dotenv()
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 
+
 CHUNK_SIZE = 900
 CHUNK_OVERLAP = 100
-VECTOR_PATH = "vectordb"
-DATASET_PATH = "assets/datasets"
+VECTOR_PATH = "src/vectordb"
+DATASET_PATH = "src/datasets"
 MODEL_EMBEDDING = "text-embedding-3-small"
 EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
+
 
 documents = []
 for file_name in os.listdir(DATASET_PATH):
@@ -30,6 +32,7 @@ for file_name in os.listdir(DATASET_PATH):
                         Document(page_content=text, metadata={"source": file_name})
                     )
 
+
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,
     chunk_overlap=CHUNK_OVERLAP,
@@ -38,6 +41,7 @@ text_splitter = RecursiveCharacterTextSplitter(
 )
 chunks = text_splitter.split_documents(documents)
 print(f"Split {len(documents)} documents into {len(chunks)} chunks.")
+
 
 vectordb = FAISS.from_documents(chunks, EMBEDDER)
 vectordb.save_local(VECTOR_PATH)

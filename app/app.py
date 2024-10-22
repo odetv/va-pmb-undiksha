@@ -1,9 +1,11 @@
 import streamlit as st
 import re
-from main import build_graph
+import sys
 import os
 import pandas as pd
 import pdfplumber
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from main import build_graph
 from langchain.schema.document import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
@@ -17,8 +19,8 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 
 CHUNK_SIZE = 900
 CHUNK_OVERLAP = 100
-VECTOR_PATH = "vectordb"
-DATASET_PATH = "assets/datasets"
+VECTOR_PATH = "src/vectordb"
+DATASET_PATH = "src/datasets"
 MODEL_EMBEDDING = "text-embedding-3-small"
 EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
 
@@ -55,7 +57,7 @@ def raw_data():
             try:
                 with st.spinner("Sedang memproses dokumen, harap tunggu..."):
                     documents = []
-                    DATASET_PATH = "assets/datasets"
+                    DATASET_PATH = "src/datasets"
                     for file_name in os.listdir(DATASET_PATH):
                         if file_name.endswith('.pdf'):
                             documents.append(file_name)
@@ -73,7 +75,7 @@ def raw_data():
             try:
                 with st.spinner("Sedang memproses chunking, harap tunggu..."):
                     documents = []
-                    DATASET_PATH = "assets/datasets"
+                    DATASET_PATH = "src/datasets"
 
                     for file_name in os.listdir(DATASET_PATH):
                         if file_name.endswith('.pdf'):

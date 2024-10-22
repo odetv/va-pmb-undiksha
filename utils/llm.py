@@ -53,7 +53,6 @@ def chat_groq(question: str):
 
 def embedding_openai():
     MODEL_EMBEDDING = "text-embedding-3-small"
-    # MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
     return MODEL_EMBEDDING, EMBEDDER
 
