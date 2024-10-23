@@ -1,6 +1,11 @@
-from typing import List, Set, TypedDict
+from typing import TypedDict, Annotated, Sequence, Set
+from operator import add
 from langchain.memory import ConversationBufferMemory
 
+
+class AnswerState(TypedDict):
+    agent = None
+    answer = None
 
 class AgentState(TypedDict):
     context: str
@@ -10,18 +15,18 @@ class AgentState(TypedDict):
     generalGraderDocs: str
     generalIsHallucination: str
     responseGeneral: str
-    checkKTM: str
-    responseKTM: str
-    responseIncompleteNim: str
     checkKelulusan: str
-    responseKelulusan: str
-    responseIncompleteInfoKelulusan: str
-    responseOutOfContext: str
-    responseFinal: str
-    idNIMMhs: str
-    urlKTMMhs: str
     noPendaftaran: str
     pinPendaftaran: str
+    responseIncompleteInfoKelulusan: str
+    responseKelulusan: str
+    checkKTM: str
+    idNIMMhs: str
+    urlKTMMhs: str
+    responseIncompleteNim: str
+    responseKTM: str
+    responseOutOfContext: str
+    responseFinal: str
     finishedAgents: Set[str]
-    agentsContext: str
+    answerAgents : Annotated[Sequence[AnswerState], add]
     memory: ConversationBufferMemory
