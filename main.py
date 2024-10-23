@@ -3,17 +3,19 @@ from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
-from utils.llm import chat_ollama, chat_openai, chat_groq
+from utils.agent_state import AgentState
+from utils.llm import chat_openai, chat_ollama, chat_groq
 from utils.api_undiksha import cetak_ktm_mhs
 from utils.create_graph_image import get_graph_image
-from utils.agent_state import AgentState
 from utils.debug_time import time_check
+from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 
 
 @time_check
 def questionIdentifierAgent(state: AgentState):
     info = "\n--- AGENT QUESTION IDENTIFIER ---"
     print(info)
+
     prompt = """
         Anda adalah seoarang analis pertanyaan pengguna.
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -25,11 +27,16 @@ def questionIdentifierAgent(state: AgentState):
         - OUTOFCONTEXT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
         Hasilkan hanya sesuai kata (GENERAL, KELULUSAN, KTM, OUTOFCONTEXT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
     """
+
+    original_question = state['question']
+    expanded_question = query_expansion(original_question, CONTEXT_ABBREVIATIONS)
+    state["question"] = expanded_question
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
     response = chat_openai(messages).strip().lower()
+
     state["question_type"] = response
     print("\nPertanyaan:", state["question"])
     print(f"question_type: {response}")
@@ -40,6 +47,7 @@ def questionIdentifierAgent(state: AgentState):
 def generalAgent(state: AgentState):
     info = "\n--- AGENT GENERAL ---"
     print(info)
+
     VECTOR_PATH = "src/vectordb"
     MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
@@ -47,6 +55,7 @@ def generalAgent(state: AgentState):
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
+
     state["generalContext"] = context
     state["finishedAgents"].add("general")
     # print(state["generalContext"] )
@@ -57,6 +66,7 @@ def generalAgent(state: AgentState):
 def graderDocsAgent(state: AgentState):
     info = "\n--- Agent Grader Documents ---"
     print(info)
+
     prompt = f"""
     Anda adalah seorang pemilih konteks handal.
     - Ambil informasi yang hanya berkaitan dengan pertanyaan.
@@ -66,11 +76,13 @@ def graderDocsAgent(state: AgentState):
     - Jangan jawab pertanyaan pengguna, hanya pilah konteks yang berkaitan dengan pertanyaan saja.
     Konteks: {state["generalContext"]}
     """
+
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
     ]
     responseGraderDocsAgent = chat_openai(messages)
+
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderdocs")
     # print(state["generalGraderDocs"])
@@ -81,21 +93,22 @@ def graderDocsAgent(state: AgentState):
 def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Agent Grader Hallucinations ---"
     print(info)
+
     prompt = f"""
     Anda adalah seorang penilai dari OPINI dengan FAKTA.
     - Berikan hanya nilai "true" jika OPINI tidak berkesinambungan dengan FAKTA atau "false" jika OPINI sesuai dengan FAKTA.
     - OPINI: {state["answerAgents"]}
     - FAKTA: {state["generalGraderDocs"]}
     """
+
     messages = [
         SystemMessage(content=prompt)
     ]
     response = chat_openai(messages).strip().lower()
     is_hallucination = response == "true"
+
     state["generalIsHallucination"] = is_hallucination
     state["finishedAgents"].add("graderhallucinations")
-    # print("OPINI::::"+state["answerAgents"])
-    # print("FAKTA::::"+state["generalGraderDocs"])
     print(f"Apakah hasil halusinasi? {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
 
@@ -104,6 +117,7 @@ def graderHallucinationsAgent(state: AgentState):
 def answerGeneratorAgent(state: AgentState):
     info = "\n--- Agent Answer Generator ---"
     print(info)
+
     prompt = f"""
     Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
     - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
@@ -118,13 +132,12 @@ def answerGeneratorAgent(state: AgentState):
     Pertanyaan Pengguna: {state["question"]}
     Konteks: {state["generalGraderDocs"]}
     """
+
     messages = [
         SystemMessage(content=prompt)
     ]
     response = chat_openai(messages)
-
     agentOpinion = {
-        "agent": "Informasi Umum",
         "answer": response
     }
 
@@ -138,6 +151,7 @@ def answerGeneratorAgent(state: AgentState):
 def kelulusanAgent(state: AgentState):
     info = "\n--- AGENT CEK KELULUSAN SMBJM ---"
     print(info)
+
     prompt = """
         Anda adalah seoarang analis informasi kelulusan SMBJM.
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -155,15 +169,14 @@ def kelulusanAgent(state: AgentState):
 
     noPendaftaran_match = re.search(r"no pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
     pinPendaftaran_match = re.search(r"pin.*?(\b\d{6}\b)(?!\d)", state["question"], re.IGNORECASE)
-    
     if noPendaftaran_match and pinPendaftaran_match:
         state["noPendaftaran"] = noPendaftaran_match.group(1)
         state["pinPendaftaran"] = pinPendaftaran_match.group(1)
         response = "true"
     else:
         response = "false"
-
     is_complete = response == "true"
+
     state["checkKelulusan"] = is_complete
     state["finishedAgents"].add("kelulusan") 
     print(f"Info Kelulusan Lengkap? {is_complete}")
@@ -174,6 +187,7 @@ def kelulusanAgent(state: AgentState):
 def incompleteInfoKelulusanAgent(state: AgentState):
     info = "\n--- Agent Incomplete Kelulusan SMBJM ---"
     print(info)
+
     response = """
         Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan PIN Pendaftaran SMBJM yang diberikan.
         - Format penulisan pesan:
@@ -184,10 +198,11 @@ def incompleteInfoKelulusanAgent(state: AgentState):
             PIN Pendaftaran 010203
         Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
     """
+
     agentOpinion = {
-        "agent": "Informasi Parameter Kelulusan Tidak Lengkap",
         "answer": response
     }
+
     state["finishedAgents"].add("incompleteinfokelulusan")
     state["responseIncompleteInfoKelulusan"] = response
     # print(state["responseIncompleteInfoKelulusan"])
@@ -204,14 +219,13 @@ def infoKelulusanAgent(state: AgentState):
     pinPendaftaran_match = re.search(r"pin.*?(\b\d{6}\b)(?!\d)", state["question"], re.IGNORECASE)
     state["noPendaftaran"] = noPendaftaran_match.group(1)
     state["pinPendaftaran"] = pinPendaftaran_match.group(1)
-
     nama_peserta = "Kadek Gembul"
     no_pendaftaran = state.get("noPendaftaran", "Nomor Pendaftaran tidak berhasil didapatkan.")
     pin_pendaftaran = state.get("pinPendaftaran", "PIN Pendaftaran tidak berhasil didapatkan.")
     jalur_pendaftaran = "SMBJM-UTBK"
     pilihan_daftar = "Ilmu Komputer"
     status_kelulusan = "LULUS"
-    
+
     response = f"""
         Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
         - Nama Peserta: {nama_peserta}
@@ -224,7 +238,6 @@ def infoKelulusanAgent(state: AgentState):
     """
 
     agentOpinion = {
-        "agent": "Informasi Kelulusan Peserta SMBJM Undiksha",
         "answer": response
     }
 
@@ -238,6 +251,7 @@ def infoKelulusanAgent(state: AgentState):
 def ktmAgent(state: AgentState):
     info = "\n--- AGENT KTM ---"
     print(info)
+
     prompt = """
         Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -248,6 +262,7 @@ def ktmAgent(state: AgentState):
         - FALSE - Jika pengguna tidak menyertakan nomor NIM (Nomor Induk Mahasiswa) dan tidak valid.
         Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
     """
+
     messages = [
         SystemMessage(content=prompt),
         HumanMessage(content=state["question"]),
@@ -272,6 +287,7 @@ def ktmAgent(state: AgentState):
 def incompleteNimAgent(state: AgentState):
     info = "\n--- Agent Incomplete NIM ---"
     print(info)
+
     response = """
         Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
@@ -281,8 +297,8 @@ def incompleteNimAgent(state: AgentState):
             KTM XXXXXXXXXX
         Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
     """
+
     agentOpinion = {
-        "agent": "Informasi Parameter Untuk Cek NIM Tidak Lengkap",
         "answer": response
     }
 
@@ -306,11 +322,9 @@ def printKtmAgent(state: AgentState):
         Berikut informasi Kartu Tanda Mahasiswa (KTM) Anda.
         - NIM: {id_nim_mhs}
         - URL KTM: {url_ktm_mhs}
-        - Khusus untuk URL KTM jangan berikan karakter spesial seperti []() dll (Jangan tampilkan pesan ini).
     """
 
     agentOpinion = {
-        "agent": "Informasi Kartu Tanda Mahasiswa (KTM) Undiksha",
         "answer": response
     }
 
@@ -324,10 +338,10 @@ def printKtmAgent(state: AgentState):
 def outOfContextAgent(state: AgentState):
     info = "\n--- AGENT OUT OF CONTEXT ---"
     print(info)
+
     response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
 
     agentOpinion = {
-        "agent": "Informasi Pertanyaan Tidak Relevan",
         "answer": response
     }
 
@@ -341,7 +355,6 @@ def outOfContextAgent(state: AgentState):
 def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
-
     if "general" in state["finishedAgents"]:
         total_agents =+ 3
     if "kelulusan" in state["finishedAgents"]:
@@ -360,6 +373,7 @@ def resultWriterAgent(state: AgentState):
     
     info = "\n--- AGENT RESULT WRITER AGENT ---"
     print(info)
+
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
         - Awali dengan "Salam Harmoni🙏"
@@ -368,11 +382,14 @@ def resultWriterAgent(state: AgentState):
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
+
     messages = [
         SystemMessage(content=prompt)
     ]
     response = chat_openai(messages)
+
     state["responseFinal"] = response
+    # print(state["answerAgents"])
     # print(state["responseFinal"])
     return {"responseFinal": state["responseFinal"]}
 
@@ -450,4 +467,10 @@ def build_graph(question):
 
 
 # DEBUG
-build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920. Siapa bupati buleleng?")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920. Siapa bupati buleleng?")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920.")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
+# build_graph("Siapa rektor undiksha?")
+# build_graph("Saya ingin cetak ktm 2115101014.")
+# build_graph("Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920.")
+# build_graph("Siapa bupati buleleng?")

@@ -1,5 +1,5 @@
-from typing import TypedDict, Annotated, Sequence, Set
 from operator import add
+from typing_extensions import TypedDict, Annotated, Sequence, Set
 from langchain.memory import ConversationBufferMemory
 
 

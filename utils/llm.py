@@ -1,15 +1,8 @@
 import os
-import shutil
-import pdfplumber
-import hashlib
-import json
 from langchain_ollama import OllamaLLM
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_groq import ChatGroq
-from langchain.schema.document import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 
 
