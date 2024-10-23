@@ -90,30 +90,6 @@ def graderDocsAgent(state: AgentState):
 
 
 @time_check
-def graderHallucinationsAgent(state: AgentState):
-    info = "\n--- Agent Grader Hallucinations ---"
-    print(info)
-
-    prompt = f"""
-    Anda adalah seorang penilai dari OPINI dengan FAKTA.
-    - Berikan hanya nilai "true" jika OPINI tidak berkesinambungan dengan FAKTA atau "false" jika OPINI sesuai dengan FAKTA.
-    - OPINI: {state["answerAgents"]}
-    - FAKTA: {state["generalGraderDocs"]}
-    """
-
-    messages = [
-        SystemMessage(content=prompt)
-    ]
-    response = chat_openai(messages).strip().lower()
-    is_hallucination = response == "true"
-
-    state["generalIsHallucination"] = is_hallucination
-    state["finishedAgents"].add("graderhallucinations")
-    print(f"Apakah hasil halusinasi? {is_hallucination}")
-    return {"generalIsHallucination": state["generalIsHallucination"]}
-
-
-@time_check
 def answerGeneratorAgent(state: AgentState):
     info = "\n--- Agent Answer Generator ---"
     print(info)
@@ -145,6 +121,30 @@ def answerGeneratorAgent(state: AgentState):
     state["finishedAgents"].add("answergenerator")
     # print(state["responseGeneral"])
     return {"answerAgents": [agentOpinion]}
+
+
+@time_check
+def graderHallucinationsAgent(state: AgentState):
+    info = "\n--- Agent Grader Hallucinations ---"
+    print(info)
+
+    prompt = f"""
+    Anda adalah seorang penilai dari OPINI dengan FAKTA.
+    - Berikan hanya nilai "true" jika OPINI tidak berkesinambungan dengan FAKTA atau "false" jika OPINI sesuai dengan FAKTA.
+    - OPINI: {state["answerAgents"]}
+    - FAKTA: {state["generalGraderDocs"]}
+    """
+
+    messages = [
+        SystemMessage(content=prompt)
+    ]
+    response = chat_openai(messages).strip().lower()
+    is_hallucination = response == "true"
+
+    state["generalIsHallucination"] = is_hallucination
+    state["finishedAgents"].add("graderhallucinations")
+    print(f"Apakah hasil halusinasi? {is_hallucination}")
+    return {"generalIsHallucination": state["generalIsHallucination"]}
 
 
 @time_check
