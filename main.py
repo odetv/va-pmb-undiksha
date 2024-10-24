@@ -467,7 +467,7 @@ def build_graph(question):
 
 
 # DEBUG
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920. Siapa bupati buleleng?")
+build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920. Siapa bupati buleleng?")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920.")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
