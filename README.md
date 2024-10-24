@@ -2,9 +2,8 @@
 
 ## Ringkasan
 
-![image](assets/images/RAG%20Concept.jpg)
-
-Proyek ini mengembangkan Virtual Assistant (VA) berbasis Retrieval Augmented Generation (RAG) untuk Sistem Informasi Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan Ollama, OpenAI, LangChain, Langgraph, dan FAISS. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
+![image](assets/images/architecture.jpg)
+Proyek ini mengembangkan Virtual Assistant (VA) Berbasis Multi-Agent LLM dengan Teknik Adaptive-RAG pada Sistem Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan OpenAI sebagai LLM, LangChain untuk proses RAG, Langgraph untuk mengelola Multi-Agent LLM Adaptive-RAG, dan FAISS sebagai vector database. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
 
 ## Permasalahan
 
@@ -26,16 +25,15 @@ Virtual Assistant PMB Undiksha menawarkan solusi dengan teknologi terkini untuk 
 ## Teknologi
 
 - [Python](https://www.python.org/): Bahasa pemrograman untuk membuat Chatbot.
-- [Ollama](https://ollama.com/): Embedding dan model RAG Lokal Gratis (bge-m3 & gemma2).
-- [OpenAI](https://openai.com/): Embedding dan model RAG berbayar.
 - [Langchain](https://www.langchain.com/): Framework untuk mengelola alur kerja RAG.
 - [Langgraph](https://www.langchain.com/langgraph): Framework untuk Multi Agent pada Langchain.
-- [FAISS](https://faiss.ai/): Penyimpanan database vektor.
+- [OpenAI](https://openai.com/): Embedding dan model RAG berbayar.
+- [Streamlit](https://streamlit.io/): Web interface application.
+- [FAISS](https://faiss.ai/): Penyimpanan vector database.
 
 ## Apa itu RAG?
 
-![image](assets/images/RAG%20Procces.png)
-
+![image](assets/images/rag.png)
 Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, Virtual Assistant dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
@@ -55,8 +53,7 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 
 ## Contoh Implementasi
 
-![image](assets/images/RAG%20Flow.png)
-
+![image](assets/images/concept.jpg)
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
@@ -79,13 +76,13 @@ Respons Akhir: "Syarat-syarat pendaftaran mahasiswa baru di Undiksha adalah seba
 Clone project
 
 ```bash
-  https://github.com/odetv/chatbot-pmb-undiksha.git
+  https://github.com/odetv/va-pmb-undiksha.git
 ```
 
 Masuk ke direktori project
 
 ```bash
-  cd chatbot-pmb-undiksha
+  cd va-pmb-undiksha
 ```
 
 Install Requirements
@@ -97,30 +94,47 @@ Install Requirements
 Buat dan Lengkapi file environment variabel (.env)
 
 ```bash
-  OPENAI_API_KEY="API_KEY_OPENAI_PLATFORM"
-  OLLAMA_BASE_URL="BASE_URL_OLLAMA_SERVE"
+  OPENAI_API_KEY=""
+  GROQ_API_KEY=""
+  OLLAMA_BASE_URL=""
+  API_KTM_UNDIKSHA_AUTH_URL=""
+  API_KTM_UNDIKSHA_USERNAME=""
+  API_KTM_UNDIKSHA_PASSWORD=""
+  API_KTM_UNDIKSHA_RESPONSE_URL=""
+  API_KELULUSAN_UNDIKSHA_AUTH_URL=""
+  API_KELULUSAN_UNDIKSHA_USERNAME=""
+  API_KELULUSAN_UNDIKSHA_PASSWORD=""
+  API_KELULUSAN_UNDIKSHA_RESPONSE_URL=""
 ```
 
 Jalankan project
 
 ```bash
-  python main.py
+  streamlit run app/Home.py
 ```
 
 ## Referensi
 
-- [Best Practices in Retrieval Augmented Generation](https://gradientflow.substack.com/p/best-practices-in-retrieval-augmented)
-- [Simplest Method to improve RAG pipeline: Re-Ranking](https://medium.com/etoai/simplest-method-to-improve-rag-pipeline-re-ranking-cf6eaec6d544)
-- [The What and How of RAG(Retrieval Augmented Generation) Implementation Using Langchain](https://srinivas-mahakud.medium.com/the-what-and-how-of-retrieval-augmented-generation-8e4a05c08a50)
-- [Retrieval-Augmented Generation (RAG): From Theory to LangChain Implementation](https://towardsdatascience.com/retrieval-augmented-generation-rag-from-theory-to-langchain-implementation-4e9bd5f6a4f2)
-- [RAG - PDF Q&A Using Llama 2 in 8 Steps](https://medium.com/@Sanjjushri/rag-pdf-q-a-using-llama-2-in-8-steps-021a7dbe26e1)
-- [RAG + Langchain Python Project: Easy AI/Chat For Your Docs](https://youtu.be/tcqEUSNCn8I)
-- [Python RAG Tutorial (with Local LLMs): Al For Your PDFs](https://youtu.be/2TJxpyO3ei4)
-- [A Survey of Techniques for Maximizing LLM Performance](https://youtu.be/ahnGLM-RC1Y)
-- [18 Lessons teaching everything you need to know to start building Generative AI applications](https://microsoft.github.io/generative-ai-for-beginners/#/)
-- [How to build a PDF chatbot with Langchain 🦜🔗 and FAISS](https://kevincoder.co.za/how-to-build-a-pdf-chatbot-with-langchain-and-faiss)
-- [Memory in LLMChain](https://python.langchain.com/v0.1/docs/modules/memory/adding_memory/)
-- [How to Make LLM Remember Conversation with Langchain](https://medium.com/@vinayakdeshpande111/how-to-make-llm-remember-conversation-with-langchain-924083079d95)
-- [Conversation Summary Buffer](https://python.langchain.com/v0.1/docs/modules/memory/types/summary_buffer/)
-- [From Basics to Advanced: Exploring LangGraph](https://towardsdatascience.com/from-basics-to-advanced-exploring-langgraph-e8c1cf4db787)
-- [Build a Reliable RAG Agent using LangGraph](https://medium.com/the-ai-forum/build-a-reliable-rag-agent-using-langgraph-2694d55995cd)
+1. [Build a ChatBot Using Local LLM](https://datasciencenerd.us/build-a-chatbot-using-local-llm-6b8dbb0ca514)
+2. [Best Practices in Retrieval Augmented Generation](https://gradientflow.substack.com/p/best-practices-in-retrieval-augmented)
+3. [Simplest Method to improve RAG pipeline: Re-Ranking](https://medium.com/etoai/simplest-method-to-improve-rag-pipeline-re-ranking-cf6eaec6d544)
+4. [The What and How of RAG(Retrieval Augmented Generation) Implementation Using Langchain](https://srinivas-mahakud.medium.com/the-what-and-how-of-retrieval-augmented-generation-8e4a05c08a50)
+5. [Retrieval-Augmented Generation (RAG): From Theory to LangChain Implementation](https://towardsdatascience.com/retrieval-augmented-generation-rag-from-theory-to-langchain-implementation-4e9bd5f6a4f2)
+6. [RAG - PDF Q&A Using Llama 2 in 8 Steps](https://medium.com/@Sanjjushri/rag-pdf-q-a-using-llama-2-in-8-steps-021a7dbe26e1)
+7. [RAG + Langchain Python Project: Easy AI/Chat For Your Docs](https://youtu.be/tcqEUSNCn8I)
+8. [Python RAG Tutorial (with Local LLMs): Al For Your PDFs](https://youtu.be/2TJxpyO3ei4)
+9. [A Survey of Techniques for Maximizing LLM Performance](https://youtu.be/ahnGLM-RC1Y)
+10. [18 Lessons teaching everything you need to know to start building Generative AI applications](https://microsoft.github.io/generative-ai-for-beginners/#/)
+11. [How to build a PDF chatbot with Langchain 🦜🔗 and FAISS](https://kevincoder.co.za/how-to-build-a-pdf-chatbot-with-langchain-and-faiss)
+12. [How to build a PDF chatbot with Langchain 🦜🔗 and FAISS](https://heartbeat.comet.ml/how-to-enhance-conversational-agents-with-memory-in-lang-chain-6aadd335b621)
+13. [Memory in LLMChain](https://python.langchain.com/v0.1/docs/modules/memory/adding_memory/)
+14. [RunnableWithMessageHistory](https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html#langchain_core.runnables.history.RunnableWithMessageHistory)
+15. [Why Assistants API is Slow? Any speed solution?](https://community.openai.com/t/why-assistants-api-is-slow-any-speed-solution/558065)
+16. [OpenAI API is extremely slow](https://github.com/langchain-ai/langchain/issues/11836)
+17. [Adaptive RAG](https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_adaptive_rag/)
+18. [Hands-On LangChain for LLMs App: ChatBots Memory](https://pub.towardsai.net/hands-on-langchain-for-llms-app-chatbots-memory-9394030e5a9e)
+19. [How to Make LLM Remember Conversation with Langchain](https://medium.com/@vinayakdeshpande111/how-to-make-llm-remember-conversation-with-langchain-924083079d95)
+20. [Conversation Summary Buffer](https://python.langchain.com/v0.1/docs/modules/memory/types/summary_buffer/)
+21. [From Basics to Advanced: Exploring LangGraph](https://towardsdatascience.com/from-basics-to-advanced-exploring-langgraph-e8c1cf4db787)
+22. [Build a Reliable RAG Agent using LangGraph](https://medium.com/the-ai-forum/build-a-reliable-rag-agent-using-langgraph-2694d55995cd)
+23. [LangGraph](https://langchain-ai.github.io/langgraph/)
