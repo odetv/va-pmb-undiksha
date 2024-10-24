@@ -17,6 +17,7 @@ class AgentState(TypedDict):
     responseGeneral: str
     checkKelulusan: str
     noPendaftaran: str
+    tglLahirPendaftar: str
     pinPendaftaran: str
     responseIncompleteInfoKelulusan: str
     responseKelulusan: str

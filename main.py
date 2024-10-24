@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 from utils.agent_state import AgentState
 from utils.llm import chat_openai, chat_ollama, chat_groq
-from utils.api_undiksha import cetak_ktm_mhs
+from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
@@ -13,7 +13,7 @@ from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 
 @time_check
 def questionIdentifierAgent(state: AgentState):
-    info = "\n--- AGENT QUESTION IDENTIFIER ---"
+    info = "\n--- QUESTION IDENTIFIER ---"
     print(info)
 
     prompt = """
@@ -21,11 +21,11 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 3 konteks pertanyaan yang diajukan:
-        - GENERAL - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), dan perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha).
-        - KELULUSAN - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
-        - KTM - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
-        - OUTOFCONTEXT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
-        Hasilkan hanya sesuai kata (GENERAL, KELULUSAN, KTM, OUTOFCONTEXT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), dan perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha).
+        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
+        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
+        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
+        Hasilkan hanya sesuai kata (GENERAL_AGENT, KELULUSAN_AGENT, KTM_AGENT, OUTOFCONTEXT_AGENT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
     """
 
     original_question = state['question']
@@ -45,7 +45,7 @@ def questionIdentifierAgent(state: AgentState):
 
 @time_check
 def generalAgent(state: AgentState):
-    info = "\n--- AGENT GENERAL ---"
+    info = "\n--- GENERAL ---"
     print(info)
 
     VECTOR_PATH = "src/vectordb"
@@ -57,14 +57,14 @@ def generalAgent(state: AgentState):
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
 
     state["generalContext"] = context
-    state["finishedAgents"].add("general")
+    state["finishedAgents"].add("general_agent")
     # print(state["generalContext"] )
     return {"generalContext": state["generalContext"]}
 
 
 @time_check
 def graderDocsAgent(state: AgentState):
-    info = "\n--- Agent Grader Documents ---"
+    info = "\n--- Grader Documents ---"
     print(info)
 
     prompt = f"""
@@ -84,14 +84,14 @@ def graderDocsAgent(state: AgentState):
     responseGraderDocsAgent = chat_openai(messages)
 
     state["generalGraderDocs"] = responseGraderDocsAgent
-    state["finishedAgents"].add("graderdocs")
+    state["finishedAgents"].add("graderDocs_agent")
     # print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 
 @time_check
 def answerGeneratorAgent(state: AgentState):
-    info = "\n--- Agent Answer Generator ---"
+    info = "\n--- Answer Generator ---"
     print(info)
 
     prompt = f"""
@@ -118,14 +118,14 @@ def answerGeneratorAgent(state: AgentState):
     }
 
     state["responseGeneral"] = response
-    state["finishedAgents"].add("answergenerator")
+    state["finishedAgents"].add("answerGenerator_agent")
     # print(state["responseGeneral"])
     return {"answerAgents": [agentOpinion]}
 
 
 @time_check
 def graderHallucinationsAgent(state: AgentState):
-    info = "\n--- Agent Grader Hallucinations ---"
+    info = "\n--- Grader Hallucinations ---"
     print(info)
 
     prompt = f"""
@@ -142,14 +142,14 @@ def graderHallucinationsAgent(state: AgentState):
     is_hallucination = response == "true"
 
     state["generalIsHallucination"] = is_hallucination
-    state["finishedAgents"].add("graderhallucinations")
+    state["finishedAgents"].add("graderHallucinations_agent")
     print(f"Apakah hasil halusinasi? {is_hallucination}")
     return {"generalIsHallucination": state["generalIsHallucination"]}
 
 
 @time_check
 def kelulusanAgent(state: AgentState):
-    info = "\n--- AGENT CEK KELULUSAN SMBJM ---"
+    info = "\n--- CEK KELULUSAN SMBJM ---"
     print(info)
 
     prompt = """
@@ -157,8 +157,8 @@ def kelulusanAgent(state: AgentState):
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 2 konteks pertanyaan yang diajukan:
-        - TRUE - Jika pengguna menyertakan Nomor Pendaftaran dan PIN.
-        - FALSE - Jika pengguna tidak menyertakan Nomor Pendaftaran dan PIN.
+        - TRUE - Jika pengguna menyertakan Nomor Pendaftaran (Format 10 digit angka) dan Tanggal Lahir (Format YYYY-MM-DD).
+        - FALSE - Jika pengguna tidak menyertakan Nomor Pendaftaran (Format 10 digit angka) dan Tanggal Lahir (Format YYYY-MM-DD).
         Hasilkan hanya 1 sesuai kata (TRUE, FALSE).
     """
     messages = [
@@ -167,35 +167,39 @@ def kelulusanAgent(state: AgentState):
     ]
     response = chat_openai(messages).strip().lower()
 
-    noPendaftaran_match = re.search(r"no pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
-    pinPendaftaran_match = re.search(r"pin.*?(\b\d{6}\b)(?!\d)", state["question"], re.IGNORECASE)
-    if noPendaftaran_match and pinPendaftaran_match:
+    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["question"], re.IGNORECASE)
+
+    print(noPendaftaran_match)
+    print(tglLahirPendaftar_match)
+
+    if noPendaftaran_match and tglLahirPendaftar_match:
         state["noPendaftaran"] = noPendaftaran_match.group(1)
-        state["pinPendaftaran"] = pinPendaftaran_match.group(1)
+        state["tglLahirPendaftar"] = tglLahirPendaftar_match.group(1)
         response = "true"
     else:
         response = "false"
     is_complete = response == "true"
 
     state["checkKelulusan"] = is_complete
-    state["finishedAgents"].add("kelulusan") 
+    state["finishedAgents"].add("kelulusan_agent") 
     print(f"Info Kelulusan Lengkap? {is_complete}")
     return {"checkKelulusan": state["checkKelulusan"]}
 
 
 @time_check
 def incompleteInfoKelulusanAgent(state: AgentState):
-    info = "\n--- Agent Incomplete Kelulusan SMBJM ---"
+    info = "\n--- Incomplete Info Kelulusan SMBJM ---"
     print(info)
 
     response = """
-        Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan PIN Pendaftaran SMBJM yang diberikan.
+        Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM yang diberikan.
         - Format penulisan pesan:
-            Nomor Pendaftaran [NO]
-            PIN Pendaftaran [PIN]
+            Nomor Pendaftaran [NO_PENDAFTARAN_10_DIGIT]
+            Tanggal Lahir [YYYY-MM-DD]
         - Contoh penulisan pesan:
-            Nomor Pendaftaran 1234567890
-            PIN Pendaftaran 010203
+            Nomor Pendaftaran 3201928428
+            Tanggal Lahir 2005-01-30
         Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
     """
 
@@ -203,7 +207,7 @@ def incompleteInfoKelulusanAgent(state: AgentState):
         "answer": response
     }
 
-    state["finishedAgents"].add("incompleteinfokelulusan")
+    state["finishedAgents"].add("incompleteInfoKelulusan_agent")
     state["responseIncompleteInfoKelulusan"] = response
     # print(state["responseIncompleteInfoKelulusan"])
     return {"answerAgents": [agentOpinion]}
@@ -212,36 +216,47 @@ def incompleteInfoKelulusanAgent(state: AgentState):
 
 @time_check
 def infoKelulusanAgent(state: AgentState):
-    info = "\n--- Agent Info Kelulusan SMBJM ---"
+    info = "\n--- Info Kelulusan SMBJM ---"
     print(info)
 
-    noPendaftaran_match = re.search(r"no pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
-    pinPendaftaran_match = re.search(r"pin.*?(\b\d{6}\b)(?!\d)", state["question"], re.IGNORECASE)
+    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["question"], re.IGNORECASE)
     state["noPendaftaran"] = noPendaftaran_match.group(1)
-    state["pinPendaftaran"] = pinPendaftaran_match.group(1)
-    nama_peserta = "Kadek Gembul"
-    no_pendaftaran = state.get("noPendaftaran", "Nomor Pendaftaran tidak berhasil didapatkan.")
-    pin_pendaftaran = state.get("pinPendaftaran", "PIN Pendaftaran tidak berhasil didapatkan.")
-    jalur_pendaftaran = "SMBJM-UTBK"
-    pilihan_daftar = "Ilmu Komputer"
-    status_kelulusan = "LULUS"
+    state["tglLahirPendaftar"] = tglLahirPendaftar_match.group(1)
+
+    try:
+        kelulusan_info = show_kelulusan_pmb(state)
+        no_pendaftaran = kelulusan_info.get("nomor_pendaftaran", "")
+        nama_siswa = kelulusan_info.get("nama_siswa", "")
+        tgl_lahir = kelulusan_info.get("tgl_lahir", "")
+        tgl_daftar = kelulusan_info.get("tahun", "")
+        pilihan_prodi = kelulusan_info.get("program_studi", "")
+        status_kelulusan = kelulusan_info.get("status_kelulusan", "")
+
+    except Exception as e:
+        # print("Error retrieving graduation information:", e)
+        return {
+            "answerAgents": [{
+                "answer": "Terjadi kesalahan dalam mendapatkan informasi kelulusan. Silakan coba lagi nanti."
+            }]
+        }
 
     response = f"""
         Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
-        - Nama Peserta: {nama_peserta}
         - Nomor Pendaftaran: {no_pendaftaran}
-        - PIN: {pin_pendaftaran}
-        - Jalur: {jalur_pendaftaran}
-        - Pilihan: {pilihan_daftar}
+        - Nama Siswa: {nama_siswa}
+        - Tanggal Lahir: {tgl_lahir}
+        - Tahun Daftar: {tgl_daftar}
+        - Pilihan Program Studi: {pilihan_prodi}
         - Status Kelulusan: {status_kelulusan}
-        Jika lulus berikan ucapan selamat, jika tidak berikan motivasi dan ucapan terima kasih.
+        Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
     """
 
     agentOpinion = {
         "answer": response
     }
 
-    state["finishedAgents"].add("infokelulusan")
+    state["finishedAgents"].add("infoKelulusan_agent")
     state["responseKelulusan"] = response
     # print(state["responseKelulusan"])
     return {"answerAgents": [agentOpinion]}
@@ -249,7 +264,7 @@ def infoKelulusanAgent(state: AgentState):
 
 @time_check
 def ktmAgent(state: AgentState):
-    info = "\n--- AGENT KTM ---"
+    info = "\n--- KTM ---"
     print(info)
 
     prompt = """
@@ -269,7 +284,7 @@ def ktmAgent(state: AgentState):
     ]
     response = chat_openai(messages).strip().lower()
 
-    nim_match = re.search(r"ktm.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
     if nim_match:
         state["idNIMMhs"] = nim_match.group(1)
         response = "true"
@@ -278,14 +293,14 @@ def ktmAgent(state: AgentState):
     is_complete = response == "true"
 
     state["checkKTM"] = is_complete
-    state["finishedAgents"].add("ktm") 
+    state["finishedAgents"].add("ktm_agent") 
     print(f"Info KTM Lengkap? {is_complete}")
     return {"checkKTM": state["checkKTM"]}
 
 
 @time_check
-def incompleteNimAgent(state: AgentState):
-    info = "\n--- Agent Incomplete NIM ---"
+def incompleteInfoKTMAgent(state: AgentState):
+    info = "\n--- Incomplete Info KTM ---"
     print(info)
 
     response = """
@@ -302,21 +317,21 @@ def incompleteNimAgent(state: AgentState):
         "answer": response
     }
 
-    state["finishedAgents"].add("incompletenim")
+    state["finishedAgents"].add("incompleteInfoKTM_agent")
     state["responseIncompleteNim"] = response
     # print(state["responseIncompleteNim"])
     return {"answerAgents": [agentOpinion]}
 
 
 @time_check
-def printKtmAgent(state: AgentState):
-    info = "\n--- Agent Print KTM ---"
+def infoKTMAgent(state: AgentState):
+    info = "\n--- Info KTM ---"
     print(info)
 
-    nim_match = re.search(r"ktm.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
     state["idNIMMhs"] = nim_match.group(1)
     id_nim_mhs = state.get("idNIMMhs", "ID NIM tidak berhasil didapatkan.")
-    url_ktm_mhs = cetak_ktm_mhs(state)
+    url_ktm_mhs = show_ktm_mhs(state)
     
     response = f"""
         Berikut informasi Kartu Tanda Mahasiswa (KTM) Anda.
@@ -328,7 +343,7 @@ def printKtmAgent(state: AgentState):
         "answer": response
     }
 
-    state["finishedAgents"].add("printktm")
+    state["finishedAgents"].add("infoKTM_agent")
     state["responseKTM"] = response
     # print(state["responseKTM"])
     return {"answerAgents": [agentOpinion]}
@@ -336,7 +351,7 @@ def printKtmAgent(state: AgentState):
 
 @time_check
 def outOfContextAgent(state: AgentState):
-    info = "\n--- AGENT OUT OF CONTEXT ---"
+    info = "\n--- OUT OF CONTEXT ---"
     print(info)
 
     response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
@@ -345,7 +360,7 @@ def outOfContextAgent(state: AgentState):
         "answer": response
     }
 
-    state["finishedAgents"].add("outofcontext")
+    state["finishedAgents"].add("outofcontext_agent")
     state["responseOutOfContext"] = response
     # print(state["responseOutOfContext"])
     return {"answerAgents": [agentOpinion]}
@@ -355,13 +370,13 @@ def outOfContextAgent(state: AgentState):
 def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
-    if "general" in state["finishedAgents"]:
+    if "general_agent" in state["finishedAgents"]:
         total_agents =+ 3
-    if "kelulusan" in state["finishedAgents"]:
+    if "kelulusan_agent" in state["finishedAgents"]:
         total_agents += 2
-    if "ktm" in state["finishedAgents"]:
+    if "ktm_agent" in state["finishedAgents"]:
         total_agents += 2
-    if "outofcontext" in state["finishedAgents"]:
+    if "outofcontext_agent" in state["finishedAgents"]:
         total_agents += 1
     
     print(f"DEBUG: finishedAgents = {state['finishedAgents']}")
@@ -371,7 +386,7 @@ def resultWriterAgent(state: AgentState):
         print("Menunggu agen lain untuk menyelesaikan...")
         return None
     
-    info = "\n--- AGENT RESULT WRITER AGENT ---"
+    info = "\n--- RESULT WRITER ---"
     print(info)
 
     prompt = f"""
@@ -399,65 +414,65 @@ def build_graph(question):
     workflow = StateGraph(AgentState)
     initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
-    workflow.add_node("questionIdentifier", lambda x: initial_state)
-    workflow.add_node("resultWriter", resultWriterAgent)
-    workflow.add_edge(START, "questionIdentifier")
+    workflow.add_node("questionIdentifier_agent", lambda x: initial_state)
+    workflow.add_node("resultWriter_agent", resultWriterAgent)
+    workflow.add_edge(START, "questionIdentifier_agent")
 
-    if "general" in context:
-        workflow.add_node("general", generalAgent)
-        workflow.add_node("graderdocs", graderDocsAgent)
-        workflow.add_node("answergenerator", answerGeneratorAgent)
-        workflow.add_node("graderhallucinations", graderHallucinationsAgent)
-        workflow.add_edge("questionIdentifier", "general")
-        workflow.add_edge("general", "graderdocs")
-        workflow.add_edge("graderdocs", "answergenerator")
-        workflow.add_edge("answergenerator", "graderhallucinations")
+    if "general_agent" in context:
+        workflow.add_node("general_agent", generalAgent)
+        workflow.add_node("graderDocs_agent", graderDocsAgent)
+        workflow.add_node("answerGenerator_agent", answerGeneratorAgent)
+        workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
+        workflow.add_edge("questionIdentifier_agent", "general_agent")
+        workflow.add_edge("general_agent", "graderDocs_agent")
+        workflow.add_edge("graderDocs_agent", "answerGenerator_agent")
+        workflow.add_edge("answerGenerator_agent", "graderHallucinations_agent")
         workflow.add_conditional_edges(
-            "graderhallucinations",
+            "graderHallucinations_agent",
             lambda state: state["generalIsHallucination"], {
-                True: "answergenerator",
-                False: "resultWriter",
+                True: "answerGenerator_agent",
+                False: "resultWriter_agent",
             }
         )
 
-    if "kelulusan" in context:
-        workflow.add_node("kelulusan", kelulusanAgent)
-        workflow.add_node("incompleteinfokelulusan", incompleteInfoKelulusanAgent)
-        workflow.add_node("infokelulusan", infoKelulusanAgent)
-        workflow.add_edge("questionIdentifier", "kelulusan")
+    if "kelulusan_agent" in context:
+        workflow.add_node("kelulusan_agent", kelulusanAgent)
+        workflow.add_node("incompleteInfoKelulusan_agent", incompleteInfoKelulusanAgent)
+        workflow.add_node("infoKelulusan_agent", infoKelulusanAgent)
+        workflow.add_edge("questionIdentifier_agent", "kelulusan_agent")
         workflow.add_conditional_edges(
-            "kelulusan",
+            "kelulusan_agent",
             lambda state: state["checkKelulusan"],
             {
-                True: "infokelulusan",
-                False: "incompleteinfokelulusan"
+                True: "infoKelulusan_agent",
+                False: "incompleteInfoKelulusan_agent"
             }
         )
-        workflow.add_edge("incompleteinfokelulusan", "resultWriter")
-        workflow.add_edge("infokelulusan", "resultWriter")
+        workflow.add_edge("incompleteInfoKelulusan_agent", "resultWriter_agent")
+        workflow.add_edge("infoKelulusan_agent", "resultWriter_agent")
 
-    if "ktm" in context:
-        workflow.add_node("ktm", ktmAgent)
-        workflow.add_node("incompletenim", incompleteNimAgent)
-        workflow.add_node("printktm", printKtmAgent)
-        workflow.add_edge("questionIdentifier", "ktm")
+    if "ktm_agent" in context:
+        workflow.add_node("ktm_agent", ktmAgent)
+        workflow.add_node("incompleteInfoKTM_agent", incompleteInfoKTMAgent)
+        workflow.add_node("infoKTM_agent", infoKTMAgent)
+        workflow.add_edge("questionIdentifier_agent", "ktm_agent")
         workflow.add_conditional_edges(
-            "ktm",
+            "ktm_agent",
             lambda state: state["checkKTM"],
             {
-                True: "printktm",
-                False: "incompletenim"
+                True: "infoKTM_agent",
+                False: "incompleteInfoKTM_agent"
             }
         )
-        workflow.add_edge("incompletenim", "resultWriter")
-        workflow.add_edge("printktm", "resultWriter")
+        workflow.add_edge("incompleteInfoKTM_agent", "resultWriter_agent")
+        workflow.add_edge("infoKTM_agent", "resultWriter_agent")
 
-    if "outofcontext" in context:
-        workflow.add_node("outofcontext", outOfContextAgent)
-        workflow.add_edge("questionIdentifier", "outofcontext")
-        workflow.add_edge("outofcontext", "resultWriter")
+    if "outofcontext_agent" in context:
+        workflow.add_node("outofcontext_agent", outOfContextAgent)
+        workflow.add_edge("questionIdentifier_agent", "outofcontext_agent")
+        workflow.add_edge("outofcontext_agent", "resultWriter_agent")
 
-    workflow.add_edge("resultWriter", END)
+    workflow.add_edge("resultWriter_agent", END)
     graph = workflow.compile()
     result = graph.invoke({"question": question})
     response = result.get("responseFinal")
@@ -466,11 +481,11 @@ def build_graph(question):
     return response
 
 
-# DEBUG
-build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920. Siapa bupati buleleng?")
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920.")
+# DEBUG QUERY EXAMPLES
+build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
-# build_graph("Saya ingin cek kelulusan no pendaftaran 1234512309 pin 681920.")
+# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")
