@@ -17,6 +17,5 @@ pytest
 typing-extensions
 faiss-cpu==1.8.0
 groq
-pdfplumber
 streamlit
 pandas

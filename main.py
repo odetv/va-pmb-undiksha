@@ -21,7 +21,7 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 3 konteks pertanyaan yang diajukan:
-        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), dan perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha).
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
         - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
         - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
@@ -33,12 +33,12 @@ def questionIdentifierAgent(state: AgentState):
     state["question"] = expanded_question
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=state["question"]),
+        HumanMessage(content=expanded_question),
     ]
     response = chat_openai(messages).strip().lower()
 
     state["question_type"] = response
-    print("\nPertanyaan:", state["question"])
+    print("\nPertanyaan:", expanded_question)
     print(f"question_type: {response}")
     return state
 
@@ -98,7 +98,7 @@ def answerGeneratorAgent(state: AgentState):
     Berikut pedoman yang harus diikuti untuk memberikan jawaban yang relevan dan sesuai konteks dari pertanyaan yang diajukan:
     - Anda bertugas untuk memberikan informasi Penerimaan Mahasiswa Baru dan yang terkait dengan Universitas Pendidikan Ganesha.
     - Pahami frasa atau terjemahan kata-kata dalam bahasa asing sesuai dengan konteks dan pertanyaan.
-    - Jika ditanya siapa Anda, identitas Anda sebagai Bot Agent Informasi PMB Undiksha.
+    - Jika ditanya siapa Anda, identitas Anda sebagai Virtual Assistant Penerimaan Mahasiswa Baru Undiksha.
     - Berikan jawaban yang akurat dan konsisten untuk lebih dari satu pertanyaan yang mirip atau sama hanya berdasarkan konteks yang telah diberikan.
     - Jawab sesuai apa yang ditanyakan saja dan jangan menggunakan informasi diluar konteks, sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
     - Jangan berkata kasar, menghina, sarkas, satir, atau merendahkan pihak lain.

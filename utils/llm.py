@@ -54,4 +54,6 @@ def embedding_ollama():
     MODEL_EMBEDDING = "bge-m3"
     EMBEDDER = OllamaEmbeddings(base_url=ollama_base_url, model=MODEL_EMBEDDING, show_progress=True)
     return MODEL_EMBEDDING, EMBEDDER
+
+
 MODEL_EMBEDDING, EMBEDDER = embedding_openai()
