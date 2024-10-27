@@ -105,6 +105,7 @@ Buat dan Lengkapi file environment variabel (.env)
   API_KELULUSAN_UNDIKSHA_USERNAME=""
   API_KELULUSAN_UNDIKSHA_PASSWORD=""
   API_KELULUSAN_UNDIKSHA_RESPONSE_URL=""
+  STREAMLIT_KEY_ADMIN=""
 ```
 
 Jalankan project
