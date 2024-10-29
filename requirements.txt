@@ -23,3 +23,5 @@ crawl4ai
 playwright
 python-docx
 docx2pdf
+fastapi
+uvicorn

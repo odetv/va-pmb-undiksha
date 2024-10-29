@@ -25,10 +25,10 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 4 konteks pertanyaan yang diajukan:
-        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
-        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
-        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha (Universitas Pendidikan Ganesha).
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
+        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
+        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
+        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
         Hasilkan hanya sesuai kata (GENERAL_AGENT, KELULUSAN_AGENT, KTM_AGENT, OUTOFCONTEXT_AGENT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
     """
     messagesTypeQuestion = [
@@ -42,12 +42,12 @@ def questionIdentifierAgent(state: AgentState):
 
     promptParseQuestion = """
         Anda adalah seoarang pemecah pertanyaan pengguna.
-        Tugas Anda adalah memecah atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel yang cocok berdasarkan konteks.
+        Tugas Anda adalah memecah atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel yang cocok berdasarkan konteks pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Ada 4 variabel konteks:
-        - generalQuestion - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
-        - kelulusanQuestion - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
-        - ktmQuestion - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
-        - outOfContextQuestion - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
+        - generalQuestion - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
+        - kelulusanQuestion - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
+        - ktmQuestion - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
+        - outOfContextQuestion - Hanya jika diluar dari konteks tentang Undiksha.
         Hasilkan hanya langsung berupa format data JSON dan gunakan variabel sesuai dengan konteks.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda.
         Jangan mengubah isi pertanyaannya.
@@ -173,7 +173,8 @@ def graderHallucinationsAgent(state: AgentState):
 
     prompt = f"""
     Anda adalah seorang penilai dari OPINI dengan FAKTA.
-    - Berikan hanya nilai "true" jika OPINI tidak berkesinambungan dengan FAKTA atau "false" jika OPINI sesuai dengan FAKTA.
+    Berikan nilai "false" hanya jika OPINI ada kaitannya dengan FAKTA atau berikan nilai "true" hanya jika OPINI tidak ada kaitannya dengan FAKTA.
+    Harap cermat dalam menilai, karena ini akan sangat bergantung pada jawaban Anda.
     - OPINI: {state["answerAgents"]}
     - FAKTA: {state["generalGraderDocs"]}
     """
