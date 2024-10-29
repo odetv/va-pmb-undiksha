@@ -30,4 +30,8 @@ class AgentState(TypedDict):
     responseFinal: str
     finishedAgents: Set[str]
     answerAgents : Annotated[Sequence[AnswerState], add]
+    generalQuestion: str
+    kelulusanQuestion: str
+    ktmQuestion: str
+    outOfContextQuestion: str
     memory: ConversationBufferMemory

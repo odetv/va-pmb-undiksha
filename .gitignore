@@ -3,6 +3,5 @@ __pycache__
 eval/.deepeval
 eval/.deepeval-cache.json
 src/vectordb
-src/datasets
 venv
 .env

@@ -19,3 +19,7 @@ faiss-cpu==1.8.0
 groq
 streamlit
 pandas
+crawl4ai
+playwright
+python-docx
+docx2pdf

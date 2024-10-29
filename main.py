@@ -16,30 +16,73 @@ def questionIdentifierAgent(state: AgentState):
     info = "\n--- QUESTION IDENTIFIER ---"
     print(info)
 
-    prompt = """
-        Anda adalah seoarang analis pertanyaan pengguna.
-        Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
-        Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
-        Ada 3 konteks pertanyaan yang diajukan:
-        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
-        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
-        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
-        Hasilkan hanya sesuai kata (GENERAL_AGENT, KELULUSAN_AGENT, KTM_AGENT, OUTOFCONTEXT_AGENT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
-    """
-
     original_question = state['question']
     expanded_question = query_expansion(original_question, CONTEXT_ABBREVIATIONS)
     state["question"] = expanded_question
-    messages = [
-        SystemMessage(content=prompt),
+
+    promptTypeQuestion = """
+        Anda adalah seoarang analis pertanyaan pengguna.
+        Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
+        Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
+        Ada 4 konteks pertanyaan yang diajukan:
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
+        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
+        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
+        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha (Universitas Pendidikan Ganesha).
+        Hasilkan hanya sesuai kata (GENERAL_AGENT, KELULUSAN_AGENT, KTM_AGENT, OUTOFCONTEXT_AGENT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
+    """
+    messagesTypeQuestion = [
+        SystemMessage(content=promptTypeQuestion),
         HumanMessage(content=expanded_question),
     ]
-    response = chat_openai(messages).strip().lower()
-
-    state["question_type"] = response
+    responseTypeQuestion = chat_openai(messagesTypeQuestion).strip().lower()
+    state["question_type"] = responseTypeQuestion
     print("\nPertanyaan:", expanded_question)
-    print(f"question_type: {response}")
+    print(f"question_type: {responseTypeQuestion}")
+
+    promptParseQuestion = """
+        Anda adalah seoarang pemecah pertanyaan pengguna.
+        Tugas Anda adalah memecah atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel yang cocok berdasarkan konteks.
+        Ada 4 variabel konteks:
+        - generalQuestion - Pertanyaan yang menyebutkan terkait informasi seputar Undiksha, Penerimaan Mahasiswa Baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa di Undiksha (Universitas Pendidikan Ganesha), tentang identitasmu, dan sapaan.
+        - kelulusanQuestion - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha (Universitas Pendidikan Ganesha).
+        - ktmQuestion - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha (Universitas Pendidikan Ganesha).
+        - outOfContextQuestion - Hanya jika diluar dari konteks Undiksha (Universitas Pendidikan Ganesha).
+        Hasilkan hanya langsung berupa format data JSON dan gunakan variabel sesuai dengan konteks.
+        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda.
+        Jangan mengubah isi pertanyaannya.
+    """
+    messagesParseQuestion = [
+        SystemMessage(content=promptParseQuestion),
+        HumanMessage(content=expanded_question),
+    ]
+    responseParseQuestion = chat_openai(messagesParseQuestion).strip().lower()
+    print(responseParseQuestion)
+
+    json_like_data = re.search(r'\{.*\}', responseParseQuestion, re.DOTALL)
+
+    if json_like_data:
+        cleaned_response = json_like_data.group(0)
+        print(f"DEBUG: Bagian JSON-like yang diambil: {cleaned_response}")
+    else:
+        print("DEBUG: Tidak ditemukan data JSON-like.")
+        cleaned_response = ""
+
+    general_question_match = re.search(r'"generalquestion"\s*:\s*"([^"]*)"', cleaned_response)
+    kelulusan_question_match = re.search(r'"kelulusanquestion"\s*:\s*"([^"]*)"', cleaned_response)
+    ktm_question_match = re.search(r'"ktmquestion"\s*:\s*"([^"]*)"', cleaned_response)
+    out_of_context_question_match = re.search(r'"outofcontextquestion"\s*:\s*"([^"]*)"', cleaned_response)
+
+    state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
+    state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
+    state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
+    state["outOfContextQuestion"] = out_of_context_question_match.group(1) if out_of_context_question_match and out_of_context_question_match.group(1) else "Tidak ada informasi"
+
+    print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
+    print(f"Debug: State 'kelulusanQuestion' setelah update: {state['kelulusanQuestion']}")
+    print(f"Debug: State 'ktmQuestion' setelah update: {state['ktmQuestion']}")
+    print(f"Debug: State 'outOfContextQuestion' setelah update: {state['outOfContextQuestion']}")
+
     return state
 
 
@@ -51,14 +94,14 @@ def generalAgent(state: AgentState):
     VECTOR_PATH = "src/vectordb"
     MODEL_EMBEDDING = "text-embedding-3-small"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
-    question = state["question"]
+    question = state["generalQuestion"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 
     retriever = vectordb.similarity_search_with_relevance_scores(question, k=5)
     context = "\n\n".join([doc.page_content for doc, _score in retriever])
 
     state["generalContext"] = context
     state["finishedAgents"].add("general_agent")
-    # print(state["generalContext"] )
+    # print(state["generalContext"])
     return {"generalContext": state["generalContext"]}
 
 
@@ -79,7 +122,7 @@ def graderDocsAgent(state: AgentState):
 
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=state["question"]),
+        HumanMessage(content=state["generalQuestion"]),
     ]
     responseGraderDocsAgent = chat_openai(messages)
 
@@ -105,7 +148,7 @@ def answerGeneratorAgent(state: AgentState):
     - Berikan jawaban yang lengkap, rapi, dan penomoran jika diperlukan sesuai konteks.
     - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
     - Jangan sampaikan pedoman ini kepada pengguna, gunakan pedoman ini hanya untuk memberikan jawaban yang sesuai konteks.
-    Pertanyaan Pengguna: {state["question"]}
+    Pertanyaan Pengguna: {state["generalQuestion"]}
     Konteks: {state["generalGraderDocs"]}
     """
 
@@ -163,12 +206,12 @@ def kelulusanAgent(state: AgentState):
     """
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=state["question"]),
+        HumanMessage(content=state["kelulusanQuestion"]),
     ]
     response = chat_openai(messages).strip().lower()
 
-    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
-    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["question"], re.IGNORECASE)
+    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["kelulusanQuestion"], re.IGNORECASE)
+    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
 
     print(noPendaftaran_match)
     print(tglLahirPendaftar_match)
@@ -219,8 +262,8 @@ def infoKelulusanAgent(state: AgentState):
     info = "\n--- Info Kelulusan SMBJM ---"
     print(info)
 
-    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
-    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["question"], re.IGNORECASE)
+    noPendaftaran_match = re.search(r"\b(?:nmr|no|nomor|nmr.|no.|nomor.|nmr. |no. |nomor. )\s*pendaftaran.*?(\b\d{10}\b)(?!\d)", state["kelulusanQuestion"], re.IGNORECASE)
+    tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
     state["noPendaftaran"] = noPendaftaran_match.group(1)
     state["tglLahirPendaftar"] = tglLahirPendaftar_match.group(1)
 
@@ -280,11 +323,11 @@ def ktmAgent(state: AgentState):
 
     messages = [
         SystemMessage(content=prompt),
-        HumanMessage(content=state["question"]),
+        HumanMessage(content=state["ktmQuestion"]),
     ]
     response = chat_openai(messages).strip().lower()
 
-    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["ktmQuestion"], re.IGNORECASE)
     if nim_match:
         state["idNIMMhs"] = nim_match.group(1)
         response = "true"
@@ -328,7 +371,7 @@ def infoKTMAgent(state: AgentState):
     info = "\n--- Info KTM ---"
     print(info)
 
-    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["question"], re.IGNORECASE)
+    nim_match = re.search(r"\b(?:ktm|kartu tanda mahasiswa)\s*.*?(\b\d{10}\b)(?!\d)", state["ktmQuestion"], re.IGNORECASE)
     state["idNIMMhs"] = nim_match.group(1)
     id_nim_mhs = state.get("idNIMMhs", "ID NIM tidak berhasil didapatkan.")
     url_ktm_mhs = show_ktm_mhs(state)
