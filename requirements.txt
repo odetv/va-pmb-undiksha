@@ -25,3 +25,5 @@ python-docx
 docx2pdf
 fastapi
 uvicorn
+feedparser
+beautifulsoup4

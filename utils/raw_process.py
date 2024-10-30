@@ -2,7 +2,7 @@ import os
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from .llm import EMBEDDER
+from llm import EMBEDDER
 
 
 # Check Directory Datasets & Vector Database
