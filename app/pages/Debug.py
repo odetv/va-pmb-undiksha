@@ -116,6 +116,71 @@ def embeddings_documents(chunks):
     return [data["Embedding"] for data in embeddings_data]
 
 
+def entryDatasets():
+    st.write("### • Simulasi Entry Datasets")
+    st.caption("Siapkan datasets yang akan digunakan!")
+
+    with st.expander("Upload Datasets", expanded=False):
+        if not os.path.exists("src/datasets"):
+            os.makedirs("src/datasets")
+        if 'files' not in st.session_state:
+            st.session_state.files = os.listdir("src/datasets")
+        if 'upload_status' not in st.session_state:
+            st.session_state.upload_status = ""
+        if 'is_uploaded' not in st.session_state:
+            st.session_state.is_uploaded = False
+
+        uploaded_files = st.file_uploader("Upload multiple files", 
+                                        type=["pdf", "txt", "docx", "doc"], 
+                                        accept_multiple_files=True,
+                                        key="file_uploader")
+
+        if uploaded_files:
+            for uploaded_file in uploaded_files:
+                file_path = os.path.join("src/datasets", uploaded_file.name)
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+            st.session_state.upload_status = f"{len(uploaded_files)} file berhasil di-upload."
+            st.session_state.files = os.listdir("src/datasets")
+            st.session_state.is_uploaded = True
+
+        if st.session_state.upload_status:
+            st.success(st.session_state.upload_status)
+
+    with st.expander("Daftar Datasets", expanded=False):
+        current_files = os.listdir("src/datasets")
+        if current_files:
+
+            files_to_delete = []
+
+            for file in current_files:
+                is_checked = st.checkbox(file, key=file)
+
+                if is_checked:
+                    files_to_delete.append(file)
+
+            if st.button("Hapus File yang Dipilih"):
+                deleted_count = 0
+                
+                for file in files_to_delete:
+                    file_path = os.path.join("src/datasets", file)
+                    try:
+                        if os.path.exists(file_path):
+                            os.remove(file_path)
+                            deleted_count += 1
+                    except Exception as e:
+                        st.error(f"Gagal menghapus file {file}: {str(e)}")
+
+                if deleted_count > 0:
+                    st.success(f"{deleted_count} file berhasil dihapus.")
+                    st.session_state.files = os.listdir("src/datasets")
+                    st.session_state.upload_status = ""
+                    st.session_state.is_uploaded = False
+                    st.rerun()
+
+
+
+
 def raw_process():
     st.write("### • Simulasi Proses Data RAW")
     
@@ -233,6 +298,8 @@ def debug_key():
             st.warning("Key Admin tidak valid. Silakan coba lagi!")
 
     if st.session_state.access_granted:
+        entryDatasets()
+        st.markdown("***")
         raw_process()
         st.markdown("***")
         query_user_process()

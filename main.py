@@ -17,19 +17,22 @@ def questionIdentifierAgent(state: AgentState):
     print(info)
 
     original_question = state['question']
-    expanded_question = query_expansion(original_question, CONTEXT_ABBREVIATIONS)
+    cleaned_question = re.sub(r'\n+', ' ', original_question)
+    expanded_question = query_expansion(cleaned_question, CONTEXT_ABBREVIATIONS)
     state["question"] = expanded_question
 
     promptTypeQuestion = """
-        Anda adalah seoarang analis pertanyaan pengguna.
-        Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
+        Anda adalah seoarang pemecah pertanyaan pengguna.
+        Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
-        Ada 4 konteks pertanyaan yang diajukan:
+        Ada 4 konteks diajukan:
         - GENERAL_AGENT - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
-        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
+        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
+        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
         - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
-        Hasilkan hanya sesuai kata (GENERAL_AGENT, KELULUSAN_AGENT, KTM_AGENT, OUTOFCONTEXT_AGENT), kemungkinan pertanyaannya berisi lebih dari 1 konteks yang berbeda, pisahkan dengan tanda koma.
+        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm", "OUTOFCONTEXT_AGENT": "pertanyaan relevan terkait out of context"}) begitu seterusnya.
+        Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [
         SystemMessage(content=promptTypeQuestion),
@@ -40,26 +43,9 @@ def questionIdentifierAgent(state: AgentState):
     print("\nPertanyaan:", expanded_question)
     print(f"question_type: {responseTypeQuestion}")
 
-    promptParseQuestion = """
-        Anda adalah seoarang pemecah pertanyaan pengguna.
-        Tugas Anda adalah memecah atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel yang cocok berdasarkan konteks pada konteks Undiksha (Universitas Pendidikan Ganesha).
-        Ada 4 variabel konteks:
-        - generalQuestion - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
-        - kelulusanQuestion - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
-        - ktmQuestion - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
-        - outOfContextQuestion - Hanya jika diluar dari konteks tentang Undiksha.
-        Hasilkan hanya langsung berupa format data JSON dan gunakan variabel sesuai dengan konteks.
-        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda.
-        Jangan mengubah isi pertanyaannya.
-    """
-    messagesParseQuestion = [
-        SystemMessage(content=promptParseQuestion),
-        HumanMessage(content=expanded_question),
-    ]
-    responseParseQuestion = chat_openai(messagesParseQuestion).strip().lower()
-    print(responseParseQuestion)
+    print(responseTypeQuestion)
 
-    json_like_data = re.search(r'\{.*\}', responseParseQuestion, re.DOTALL)
+    json_like_data = re.search(r'\{.*\}', responseTypeQuestion, re.DOTALL)
 
     if json_like_data:
         cleaned_response = json_like_data.group(0)
@@ -68,10 +54,10 @@ def questionIdentifierAgent(state: AgentState):
         print("DEBUG: Tidak ditemukan data JSON-like.")
         cleaned_response = ""
 
-    general_question_match = re.search(r'"generalquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    kelulusan_question_match = re.search(r'"kelulusanquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    ktm_question_match = re.search(r'"ktmquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    out_of_context_question_match = re.search(r'"outofcontextquestion"\s*:\s*"([^"]*)"', cleaned_response)
+    general_question_match = re.search(r'"general_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    kelulusan_question_match = re.search(r'"kelulusan_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    ktm_question_match = re.search(r'"ktm_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    out_of_context_question_match = re.search(r'"outofcontext_agent"\s*:\s*"([^"]*)"', cleaned_response)
 
     state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
     state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
@@ -239,11 +225,9 @@ def incompleteInfoKelulusanAgent(state: AgentState):
     response = """
         Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM yang diberikan.
         - Format penulisan pesan:
-            Nomor Pendaftaran [NO_PENDAFTARAN_10_DIGIT]
-            Tanggal Lahir [YYYY-MM-DD]
+            Cek Kelulusan Nomor Pendaftaran [NO_PENDAFTARAN_10_DIGIT] Tanggal Lahir [YYYY-MM-DD]
         - Contoh penulisan pesan:
-            Nomor Pendaftaran 3201928428
-            Tanggal Lahir 2005-01-30
+            Cek Kelulusan Nomor Pendaftaran 3201928428 Tanggal Lahir 2005-01-30
         Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
     """
 
@@ -438,6 +422,7 @@ def resultWriterAgent(state: AgentState):
         - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
+        - Diakhir beritahu bahwa Harap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
@@ -531,5 +516,5 @@ def build_graph(question):
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
-# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
+# build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")

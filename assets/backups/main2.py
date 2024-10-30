@@ -43,12 +43,20 @@ def questionIdentifierAgent(state: AgentState):
     promptParseQuestion = """
         Anda adalah seoarang pemecah pertanyaan pengguna.
         Tugas Anda adalah memecah atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel yang cocok berdasarkan konteks pada konteks Undiksha (Universitas Pendidikan Ganesha).
-        Ada 4 variabel konteks:
-        - generalQuestion - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
-        - kelulusanQuestion - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
-        - ktmQuestion - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
-        - outOfContextQuestion - Hanya jika diluar dari konteks tentang Undiksha.
-        Hasilkan hanya langsung berupa format data JSON dan gunakan variabel sesuai dengan konteks.
+        Ada 4 contoh variabel konteks:
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
+        - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha.
+        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha.
+        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
+        Hasilkan hanya langsung berupa format data JSON.
+        Contoh format yang harus diikuti:
+        {
+            "general_agent": "Siapa rektor?",
+            "ktm_agent": "Saya ingin cetak ktm.",
+            "kelulusan_agent": "Saya ingin cek kelulusan.",
+            "outofcontext_agent": "Siapa bupati?"
+        }
+        Hanya lakukan parsing sesuai format data JSON, jangan membuat key baru diposisi pertanyaan pada data JSON, sambung saja pertanyaannya dan jangan ubah apapun dari pertanyaannya.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda.
         Jangan mengubah isi pertanyaannya.
     """
@@ -68,10 +76,10 @@ def questionIdentifierAgent(state: AgentState):
         print("DEBUG: Tidak ditemukan data JSON-like.")
         cleaned_response = ""
 
-    general_question_match = re.search(r'"generalquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    kelulusan_question_match = re.search(r'"kelulusanquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    ktm_question_match = re.search(r'"ktmquestion"\s*:\s*"([^"]*)"', cleaned_response)
-    out_of_context_question_match = re.search(r'"outofcontextquestion"\s*:\s*"([^"]*)"', cleaned_response)
+    general_question_match = re.search(r'"general_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    kelulusan_question_match = re.search(r'"kelulusan_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    ktm_question_match = re.search(r'"ktm_agent"\s*:\s*"([^"]*)"', cleaned_response)
+    out_of_context_question_match = re.search(r'"outofcontext_agent"\s*:\s*"([^"]*)"', cleaned_response)
 
     state["generalQuestion"] = general_question_match.group(1) if general_question_match and general_question_match.group(1) else "Tidak ada informasi"
     state["kelulusanQuestion"] = kelulusan_question_match.group(1) if kelulusan_question_match and kelulusan_question_match.group(1) else "Tidak ada informasi"
@@ -531,5 +539,5 @@ def build_graph(question):
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
-# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
+build_graph("nomor pendaftaran 3243000001\n\n tanggal lahir 2006-02-21.")
 # build_graph("Siapa bupati buleleng?")
