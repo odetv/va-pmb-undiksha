@@ -3,10 +3,15 @@ import asyncio
 from crawl4ai import AsyncWebCrawler
 from docx import Document
 from docx2pdf import convert
+from dotenv import load_dotenv
+
+
+load_dotenv()
+DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
 
 
 def save_to_word(url, content):
-    filename = os.path.join('src/datasets', url.replace("https://", "").replace("/", "_") + ".docx")
+    filename = os.path.join(DATASETS_DIR, url.replace("https://", "").replace("/", "_") + ".docx")
     doc = Document()
     for line in content.splitlines():
         doc.add_paragraph(line)
@@ -56,7 +61,7 @@ async def main():
         "https://undiksha.ac.id/panduan-daftar-kembali-snbp-2024/",
         "https://undiksha.ac.id/daftar-kembali-snbt-2024/"
     ]
-    data_folder = 'src/datasets'
+    data_folder = DATASETS_DIR
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
     tasks = [scrape_and_save(url) for url in urls]

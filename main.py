@@ -1,14 +1,20 @@
+import os
 import re
 from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
+from dotenv import load_dotenv
 from utils.agent_state import AgentState
 from utils.llm import chat_openai, chat_ollama, chat_groq
 from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
+
+
+load_dotenv()
+VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 
 
 @time_check
@@ -77,8 +83,8 @@ def generalAgent(state: AgentState):
     info = "\n--- GENERAL ---"
     print(info)
 
-    VECTOR_PATH = "src/vectordb"
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    VECTOR_PATH = VECTORDB_DIR
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(model=MODEL_EMBEDDING)
     question = state["generalQuestion"]
     vectordb = FAISS.load_local(VECTOR_PATH,  EMBEDDER, allow_dangerous_deserialization=True) 

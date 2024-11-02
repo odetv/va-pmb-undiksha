@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
+DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
+VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 
 
 def setup_page():
@@ -26,9 +28,9 @@ def load_documents():
     if "documents" not in st.session_state:
         progress = st.progress(0)
 
-        if not os.path.exists("src/datasets"):
-            os.makedirs("src/datasets")
-        loader = PyPDFDirectoryLoader("src/datasets")
+        if not os.path.exists(DATASETS_DIR):
+            os.makedirs(DATASETS_DIR)
+        loader = PyPDFDirectoryLoader(DATASETS_DIR)
         documents = loader.load()
 
         file_data = [{"No": i + 1, "Nama File": doc.metadata["source"]} for i, doc in enumerate(documents)]
@@ -88,10 +90,10 @@ def embeddings_documents(chunks):
     if "embeddings" not in st.session_state:
         progress = st.progress(0)
 
-        if not os.path.exists("src/vectordb"):
-            os.makedirs("src/vectordb")
+        if not os.path.exists(VECTORDB_DIR):
+            os.makedirs(VECTORDB_DIR)
         vectordb = FAISS.from_documents(chunks, EMBEDDER)
-        vectordb.save_local("src/vectordb")
+        vectordb.save_local(VECTORDB_DIR)
 
         embeddings_data = []
 
@@ -121,10 +123,10 @@ def entryDatasets():
     st.caption("Siapkan datasets yang akan digunakan!")
 
     with st.expander("Upload Datasets", expanded=False):
-        if not os.path.exists("src/datasets"):
-            os.makedirs("src/datasets")
+        if not os.path.exists(DATASETS_DIR):
+            os.makedirs(DATASETS_DIR)
         if 'files' not in st.session_state:
-            st.session_state.files = os.listdir("src/datasets")
+            st.session_state.files = os.listdir(DATASETS_DIR)
         if 'upload_status' not in st.session_state:
             st.session_state.upload_status = ""
         if 'is_uploaded' not in st.session_state:
@@ -137,18 +139,18 @@ def entryDatasets():
 
         if uploaded_files:
             for uploaded_file in uploaded_files:
-                file_path = os.path.join("src/datasets", uploaded_file.name)
+                file_path = os.path.join(DATASETS_DIR, uploaded_file.name)
                 with open(file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
             st.session_state.upload_status = f"{len(uploaded_files)} file berhasil di-upload."
-            st.session_state.files = os.listdir("src/datasets")
+            st.session_state.files = os.listdir(DATASETS_DIR)
             st.session_state.is_uploaded = True
 
         if st.session_state.upload_status:
             st.success(st.session_state.upload_status)
 
     with st.expander("Daftar Datasets", expanded=False):
-        current_files = os.listdir("src/datasets")
+        current_files = os.listdir(DATASETS_DIR)
         if current_files:
 
             files_to_delete = []
@@ -163,7 +165,7 @@ def entryDatasets():
                 deleted_count = 0
                 
                 for file in files_to_delete:
-                    file_path = os.path.join("src/datasets", file)
+                    file_path = os.path.join(DATASETS_DIR, file)
                     try:
                         if os.path.exists(file_path):
                             os.remove(file_path)
@@ -173,7 +175,7 @@ def entryDatasets():
 
                 if deleted_count > 0:
                     st.success(f"{deleted_count} file berhasil dihapus.")
-                    st.session_state.files = os.listdir("src/datasets")
+                    st.session_state.files = os.listdir(DATASETS_DIR)
                     st.session_state.upload_status = ""
                     st.session_state.is_uploaded = False
                     st.rerun()
@@ -233,7 +235,7 @@ def query_user_process():
         if user_question:
             st.write("Sedang memproses similarity search...")
             progress = st.progress(0)
-            vectordb = FAISS.load_local("src/vectordb", EMBEDDER, allow_dangerous_deserialization=True)
+            vectordb = FAISS.load_local(VECTORDB_DIR, EMBEDDER, allow_dangerous_deserialization=True)
             retriever = vectordb.similarity_search_with_relevance_scores(user_question, k=5)
             progress.progress(100)
             if retriever and len(retriever) > 0:

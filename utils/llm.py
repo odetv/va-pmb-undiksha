@@ -26,11 +26,18 @@ def chat_ollama(question: str, model = "gemma2"):
 def chat_openai(question: str):
     openai = ChatOpenAI(api_key=openai_api_key, model="gpt-4o-mini", temperature=0, streaming=True)
     result = ""
-    stream_response = openai.stream(question)
-    for chunk in stream_response:
-        token = chunk.content
-        result += token
-        print(token, end="", flush=True)
+    try:
+        stream_response = openai.stream(question)
+        for chunk in stream_response:
+            token = chunk.content
+            result += token
+            print(token, end="", flush=True)
+    except Exception as e:
+        error = str(e)
+        if "401" in error and "Incorrect API key" in error:
+            raise ValueError("Incorrect API key provided. Please check your OpenAI API key.")
+        else:
+            raise e
     return result
 
 
@@ -45,7 +52,7 @@ def chat_groq(question: str):
 
 
 def embedding_openai():
-    MODEL_EMBEDDING = "text-embedding-3-small"
+    MODEL_EMBEDDING = "text-embedding-3-large"
     EMBEDDER = OpenAIEmbeddings(api_key=openai_api_key, model=MODEL_EMBEDDING)
     return MODEL_EMBEDDING, EMBEDDER
 
