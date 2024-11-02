@@ -32,12 +32,12 @@ def questionIdentifierAgent(state: AgentState):
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 4 konteks diajukan:
-        - GENERAL_AGENT - Pertanyaan yang menyebutkan informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
+        - GENERAL_AGENT - Pertanyaan yang menyebutkan segala informasi umum, penerimaan mahasiswa baru (PMB), perkuliahan kampus baik itu akademik dan mahasiswa, tentang administrasi yang berkaitan dengan dosen pegawai mahasiswa, tentang identitasmu, dan jika ada sapaan maka jawablah.
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
-        - KTM_AGENT - Pertanyaan terkait Kartu Tanda Mahasiswa (KTM) Undiksha, biasanya pertanyaan pengguna berisi Nomor Induk Mahasiswa (NIM).
-        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks tentang Undiksha.
+        - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
+        - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks.
         Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
-        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "pertanyaan relevan terkait ktm", "OUTOFCONTEXT_AGENT": "pertanyaan relevan terkait out of context"}) begitu seterusnya.
+        Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "hanya jika pertanyaan mengandung kata "ktm" atau "nim", "OUTOFCONTEXT_AGENT": "pertanyaan diluar konteks"}) begitu seterusnya.
         Buat dengan format data JSON tanpa membuat key baru.
     """
     messagesTypeQuestion = [

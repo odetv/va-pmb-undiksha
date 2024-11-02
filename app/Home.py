@@ -27,7 +27,7 @@ def setup_page():
         <small>Support by: <strong>UPA TIK Undiksha</strong></small>
     </p>
     """, unsafe_allow_html=True)
-    st.title("Ayo tanyakan padaku😊")
+    st.title("Tanya Ganesha Muda🎓")
 
 
 def process_response(prompt):
