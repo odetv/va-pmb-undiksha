@@ -1,6 +1,4 @@
 .pytest_cache
 __pycache__
-eval/.deepeval
-eval/.deepeval-cache.json
 venv
 .env

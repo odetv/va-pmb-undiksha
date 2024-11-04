@@ -78,7 +78,7 @@ class RagasEvaluator:
         
         return dataset
     
-    def evaluate(self, output_file: str = "eval/output_test_rag.xlsx") -> None:
+    def evaluate(self, output_file: str = "eval/output_rag.xlsx") -> None:
         """Menjalankan evaluasi Ragas dan menyimpan hasil"""
         try:
             dataset = self.prepare_dataset()

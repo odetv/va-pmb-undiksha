@@ -1,33 +1,63 @@
 from datasets import Dataset 
 from ragas import evaluate
-from ragas.metrics import answer_correctness, context_precision, context_recall, faithfulness, answer_relevancy
+from ragas.metrics import (
+    faithfulness,
+    answer_relevancy,
+    context_recall,
+    context_precision,
+)
 
-data_samples = {
-    'question': [
-        'When was the first super bowl?', 
-        'Who won the most super bowls?'
-    ],
-    'answer': [
-        'The first superbowl was held on Jan 15, 1967', 
-        'The most super bowls have been won by The New England Patriots'
-    ],
-    'contexts': [
-        [
-            'The First AFL–NFL World Championship Game was an American football game played on January 15, 1967, at the Los Angeles Memorial Coliseum in Los Angeles,'
-        ], 
-        [
-            'The Green Bay Packers...Green Bay, Wisconsin.',
-            'The Packers compete...Football Conference'
-        ]
-    ],
-    'ground_truth': [
-        'The first superbowl was held on January 15, 1967', 
-        'The New England Patriots have won the Super Bowl a record six times'
+
+questions = [
+    "Siapa rektor undiksha?", 
+    "Siapa rektor undiksha?", 
+    "Berapa ada fakultas?",
+]
+
+ground_truths = [
+    "Prof. Dr. I Wayan Lasmawan, M.Pd.", 
+    "Prof. Dr. I Wayan Lasmawan, M.Pd.",  
+    "Universitas Pendidikan Ganesha memiliki 9 fakultas."
+]
+
+answers = [
+    "Prof. Dr. I Nyoman Jampel, M.Pd.", 
+    "Prof. Dr. I Wayan Lasmawan, M.Pd.",
+    "Universitas Pendidikan Ganesha memiliki 9 fakultas."
+]
+
+contexts = [
+    [
+        "Salam Harmoni🙏 Rektor Universitas Pendidikan Ganesha (Undiksha) adalah Prof. Dr. I Wayan Lasmawan, M.Pd."
+    ], 
+    [
+        "Salam Harmoni🙏 Rektor Universitas Pendidikan Ganesha (Undiksha) adalah Prof. Dr. I Wayan Lasmawan, M.Pd."
+    ], 
+    [
+        "Salam Harmoni🙏\n\nUniversitas Pendidikan Ganesha memiliki 9 fakultas, yaitu:\n\n1. Fakultas Teknik dan Kejuruan (FTK)\n2. Fakultas Olahraga dan Kesehatan (FOK)\n3. Fakultas Matematika dan Ilmu Pengetahuan Alam (FMIPA)\n4. Fakultas Ilmu Pendidikan (FIP)\n5. Fakultas Hukum dan Ilmu Sosial (FHIS)\n6. Fakultas Ekonomi (FE)\n7. Fakultas Bahasa dan Seni (FBS)\n8. Fakultas Kedokteran (FK)\n9. Fakultas Pascasarjana\n\nHarap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai."
     ]
+]
+
+data = {
+    "question": questions,
+    "answer": answers,
+    "contexts": contexts,
+    "ground_truths": ground_truths,
+    "reference": ground_truths
 }
 
-dataset = Dataset.from_dict(data_samples)
+dataset = Dataset.from_dict(data)
 
-score = evaluate(dataset, metrics=[context_precision, context_recall, faithfulness, answer_relevancy, answer_correctness])
-df = score.to_pandas()
-df.to_excel("output_test_rag_basic.xlsx")
+result = evaluate(
+    dataset = dataset, 
+    metrics=[
+        context_precision,
+        context_recall,
+        faithfulness,
+        answer_relevancy,
+    ],
+)
+
+df = result.to_pandas()
+df.columns = ["question", "answer", "contexts", "ground_truths", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
+df.to_excel("eval/output_basic.xlsx", index=True)
