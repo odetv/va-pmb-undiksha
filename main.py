@@ -163,6 +163,15 @@ def graderHallucinationsAgent(state: AgentState):
     info = "\n--- Grader Hallucinations ---"
     print(info)
 
+    if "generalHallucinationCount" not in state:
+        state["generalHallucinationCount"] = 0
+    state["generalHallucinationCount"] += 1
+    print(f"DEBUG: Jumlah pengecekan halusinasi: {state['generalHallucinationCount']}")
+    if state["generalHallucinationCount"] > 3:
+        print("DEBUG: Batas pengecekan halusinasi tercapai, menghentikan loop.")
+        state["generalIsHallucination"] = False
+        return {"generalIsHallucination": state["generalIsHallucination"]}
+
     prompt = f"""
     Anda adalah seorang penilai dari OPINI dengan FAKTA.
     Berikan nilai "false" hanya jika OPINI ada kaitannya dengan FAKTA atau berikan nilai "true" hanya jika OPINI tidak ada kaitannya dengan FAKTA.
@@ -525,5 +534,5 @@ def build_graph(question):
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
-# build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
-# build_graph("Apa syarat untuk mendaftar KIP Kuliah?")
+# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
+# build_graph("Siapa bupati buleleng?")

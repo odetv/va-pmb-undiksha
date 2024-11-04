@@ -13,6 +13,7 @@ class AgentState(TypedDict):
     question_type: str
     generalContext: str
     generalGraderDocs: str
+    generalHallucinationCount: int
     generalIsHallucination: str
     responseGeneral: str
     checkKelulusan: str

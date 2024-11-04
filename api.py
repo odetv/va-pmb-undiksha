@@ -85,12 +85,12 @@ tags_metadata = [
 # Initialize FastAPI
 app = FastAPI(
     openapi_tags=tags_metadata,
-    title="Shavira",
-    summary="API Shavira (Ganesha Virtual Assistant) Undiksha.",
+    title="PMB Undiksha",
+    summary="API PMB Undiksha.",
     version="0.0.1",
     docs_url="/docs",
     redoc_url=None,
-    openapi_url="/openapishavira.json"
+    openapi_url="/openapispmb.json"
 )
 
 

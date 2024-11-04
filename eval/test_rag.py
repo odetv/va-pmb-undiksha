@@ -11,13 +11,18 @@ from ragas.metrics import (
     context_recall,
     context_precision,
 )
-from sample_case import questions, ground_truths, answers, contexts
+from sample_case import questions, ground_truths
+
+
+answers = []
+contexts = []
 
 
 for question in questions:
     response, answer, context = build_graph(question)
     answers.append(answer)
     contexts.append([ctx['answer'] for ctx in context])
+
 
 data = {
     "question": questions,
@@ -26,8 +31,8 @@ data = {
     "ground_truth": ground_truths
 }
 
-dataset = Dataset.from_dict(data)
 
+dataset = Dataset.from_dict(data)
 result = evaluate(
     dataset = dataset, 
     metrics=[
@@ -37,6 +42,7 @@ result = evaluate(
         answer_relevancy,
     ],
 )
+
 
 df = result.to_pandas()
 df.columns = ["question", "answer", "contexts", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
@@ -50,9 +56,11 @@ average_row['contexts'] = ''
 average_row['ground_truth'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
+
+
 with pd.ExcelWriter("eval/score_rag.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
     workbook  = writer.book
     worksheet = writer.sheets['Evaluation']
     last_row = len(df)
-    worksheet.merge_range(f'A{last_row + 1}:D{last_row + 1}', 'Average', workbook.add_format({'align': 'center'}))
+    worksheet.merge_range(f'A{last_row + 1}:D{last_row + 1}', 'Average', workbook.add_format({'align': 'auto'}))

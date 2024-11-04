@@ -4,16 +4,7 @@ questions = [
 ]
 
 
-
 ground_truths = [
     "Prof. Dr. I Wayan Lasmawan, M.Pd.", 
     "Universitas Pendidikan Ganesha memiliki 9 fakultas."
 ]
-
-
-
-answers = []
-
-
-
-contexts = []
