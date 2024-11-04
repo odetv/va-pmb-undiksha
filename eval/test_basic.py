@@ -15,7 +15,7 @@ questions = [
     "Berapa ada fakultas?",
 ]
 
-ground_truths = [
+ground_truth = [
     "Prof. Dr. I Wayan Lasmawan, M.Pd.", 
     "Prof. Dr. I Wayan Lasmawan, M.Pd.",  
     "Universitas Pendidikan Ganesha memiliki 9 fakultas."
@@ -43,8 +43,7 @@ data = {
     "question": questions,
     "answer": answers,
     "contexts": contexts,
-    "ground_truths": ground_truths,
-    "reference": ground_truths
+    "ground_truth": ground_truth
 }
 
 dataset = Dataset.from_dict(data)
@@ -60,7 +59,7 @@ result = evaluate(
 )
 
 df = result.to_pandas()
-df.columns = ["question", "answer", "contexts", "ground_truths", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
+df.columns = ["question", "answer", "contexts", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
 df['average'] = df[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 empty_row = pd.Series([None] * len(df.columns), index=df.columns)
 df = pd.concat([df, pd.DataFrame([empty_row])], ignore_index=True)
@@ -68,7 +67,7 @@ average_row = df[['context_precision', 'context_recall', 'faithfulness', 'answer
 average_row['question'] = 'Average'
 average_row['answer'] = ''
 average_row['contexts'] = ''
-average_row['ground_truths'] = ''
+average_row['ground_truth'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
 with pd.ExcelWriter("eval/score_basic.xlsx", engine='xlsxwriter') as writer:

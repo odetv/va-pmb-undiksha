@@ -425,10 +425,8 @@ def resultWriterAgent(state: AgentState):
 
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
-        - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
-        - Diakhir beritahu bahwa Harap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
@@ -439,15 +437,11 @@ def resultWriterAgent(state: AgentState):
     response = chat_openai(messages)
 
     state["responseFinal"] = response
-
-    answers = response
-    contexts = [f"""{[state["answerAgents"]]}"""]
-
     
     # print(state["answerAgents"])
     # print(state["responseFinal"])
     # return {"responseFinal": state["responseFinal"]}
-    return {"responseFinal": state["responseFinal"], "answers": answers, "contexts": contexts}
+    return {"responseFinal": state["responseFinal"]}
 
 
 @time_check
@@ -519,6 +513,7 @@ def build_graph(question):
     response = result.get("responseFinal")
     answers = result.get("responseFinal", [])
     contexts = result.get("answerAgents", "")
+
     get_graph_image(graph)
 
     return response, answers, contexts
@@ -531,4 +526,4 @@ def build_graph(question):
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
 # build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
-build_graph("Apa syarat untuk mendaftar KIP Kuliah?")
+# build_graph("Apa syarat untuk mendaftar KIP Kuliah?")
