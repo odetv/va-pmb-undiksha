@@ -1,3 +1,5 @@
+import sys
+import os
 import pandas as pd
 from datasets import Dataset 
 from ragas import evaluate
@@ -7,37 +9,27 @@ from ragas.metrics import (
     context_recall,
     context_precision,
 )
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from main import build_graph
 
 
 questions = [
-    "Siapa rektor undiksha?", 
-    "Siapa rektor undiksha?", 
+    "Siapa rektor undiksha?",
     "Berapa ada fakultas?",
 ]
 
 ground_truths = [
     "Prof. Dr. I Wayan Lasmawan, M.Pd.", 
-    "Prof. Dr. I Wayan Lasmawan, M.Pd.",  
     "Universitas Pendidikan Ganesha memiliki 9 fakultas."
 ]
 
-answers = [
-    "Prof. Dr. I Nyoman Jampel, M.Pd.", 
-    "Prof. Dr. I Wayan Lasmawan, M.Pd.",
-    "Universitas Pendidikan Ganesha memiliki 9 fakultas."
-]
+answers = []
+contexts = []
 
-contexts = [
-    [
-        "Salam Harmoni🙏 Rektor Universitas Pendidikan Ganesha (Undiksha) adalah Prof. Dr. I Wayan Lasmawan, M.Pd."
-    ], 
-    [
-        "Salam Harmoni🙏 Rektor Universitas Pendidikan Ganesha (Undiksha) adalah Prof. Dr. I Wayan Lasmawan, M.Pd."
-    ], 
-    [
-        "Salam Harmoni🙏\n\nUniversitas Pendidikan Ganesha memiliki 9 fakultas, yaitu:\n\n1. Fakultas Teknik dan Kejuruan (FTK)\n2. Fakultas Olahraga dan Kesehatan (FOK)\n3. Fakultas Matematika dan Ilmu Pengetahuan Alam (FMIPA)\n4. Fakultas Ilmu Pendidikan (FIP)\n5. Fakultas Hukum dan Ilmu Sosial (FHIS)\n6. Fakultas Ekonomi (FE)\n7. Fakultas Bahasa dan Seni (FBS)\n8. Fakultas Kedokteran (FK)\n9. Fakultas Pascasarjana\n\nHarap diperhatikan jawaban ini dihasilkan oleh AI, mungkin saja jawaban yang dihasilkan tidak sesuai."
-    ]
-]
+for question in questions:
+    response, answer, context = build_graph(question)
+    answers.append(answer)
+    contexts.append([context])
 
 data = {
     "question": questions,
@@ -71,7 +63,7 @@ average_row['contexts'] = ''
 average_row['ground_truths'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
-with pd.ExcelWriter("eval/score_basic.xlsx", engine='xlsxwriter') as writer:
+with pd.ExcelWriter("eval/score_rag.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
     workbook  = writer.book
     worksheet = writer.sheets['Evaluation']

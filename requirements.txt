@@ -29,3 +29,4 @@ feedparser
 beautifulsoup4
 ragas
 openpyxl
+xlsxwriter

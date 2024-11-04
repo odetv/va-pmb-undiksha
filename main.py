@@ -36,7 +36,7 @@ def questionIdentifierAgent(state: AgentState):
         - KELULUSAN_AGENT - Pertanyaan terkait pengecekan status kelulusan bagi pendaftaran calon mahasiswa baru yang telah mendaftar di Undiksha, biasanya pertanyaan pengguna berisi nomor pendaftaran dan tanggal lahir.
         - KTM_AGENT - Hanya jika pertanyaan mengandung kata "ktm" atau "nim". Jika menyebutkan "nip" maka itu general.
         - OUTOFCONTEXT_AGENT - Hanya jika diluar dari konteks.
-        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda, buat yang sesuai dengan konteks saja.
+        Kemungkinan pertanyaannya berisi lebih dari 1 variabel konteks yang berbeda (jika hanya 1, maka 1 saja), buat yang sesuai dengan konteks saja.
         Jawab pertanyaan dan sertakan pertanyaan pengguna yang sesuai dengan kategori dengan contoh seperti ({"GENERAL_AGENT": "pertanyaan relevan terkait general", "KELULUSAN_AGENT": "pertanyaan relevan terkait kelulusan", "KTM_AGENT": "hanya jika pertanyaan mengandung kata "ktm" atau "nim", "OUTOFCONTEXT_AGENT": "pertanyaan diluar konteks"}) begitu seterusnya.
         Buat dengan format data JSON tanpa membuat key baru.
     """
@@ -439,9 +439,15 @@ def resultWriterAgent(state: AgentState):
     response = chat_openai(messages)
 
     state["responseFinal"] = response
+
+    answers = response
+    contexts = [f"""{[state["answerAgents"]]}"""]
+
+    
     # print(state["answerAgents"])
     # print(state["responseFinal"])
-    return {"responseFinal": state["responseFinal"]}
+    # return {"responseFinal": state["responseFinal"]}
+    return {"responseFinal": state["responseFinal"], "answers": answers, "contexts": contexts}
 
 
 @time_check
@@ -511,9 +517,11 @@ def build_graph(question):
     graph = workflow.compile()
     result = graph.invoke({"question": question})
     response = result.get("responseFinal")
+    answers = result.get("responseFinal", [])
+    contexts = result.get("answerAgents", "")
     get_graph_image(graph)
 
-    return response
+    return response, answers, contexts
 
 
 # DEBUG QUERY EXAMPLES
@@ -523,4 +531,4 @@ def build_graph(question):
 # build_graph("Siapa rektor undiksha?")
 # build_graph("Saya ingin cetak ktm 2115101014.")
 # build_graph("nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
-# build_graph("Siapa bupati buleleng?")
+build_graph("Apa syarat untuk mendaftar KIP Kuliah?")
