@@ -7,12 +7,11 @@ from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage
 from utils.llm import chat_openai, EMBEDDER
 from dotenv import load_dotenv
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 load_dotenv()
 STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
-DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
-VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 
 
 def setup_page():

@@ -2,16 +2,16 @@ import sys
 import os
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import build_graph
+from config.sample_case import questions, ground_truths
+from config.rag_naive import rag_naive
 from datasets import Dataset 
 from ragas import evaluate
 from ragas.metrics import (
     faithfulness,
     answer_relevancy,
     context_recall,
-    context_precision,
+    context_precision
 )
-from sample_case import questions, ground_truths
 
 
 answers = []
@@ -19,9 +19,9 @@ contexts = []
 
 
 for question in questions:
-    response, answer, context = build_graph(question)
+    context, answer = rag_naive(question)
     answers.append(answer)
-    contexts.append([ctx['answer'] for ctx in context])
+    contexts.append([context])
 
 
 data = {
@@ -58,7 +58,7 @@ average_row['average'] = average_row[['context_precision', 'context_recall', 'fa
 df = pd.concat([df, average_row], ignore_index=True)
 
 
-with pd.ExcelWriter("eval/score_multi_rag.xlsx", engine='xlsxwriter') as writer:
+with pd.ExcelWriter("test/scores_ragas/score_test_naive.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
     workbook  = writer.book
     worksheet = writer.sheets['Evaluation']
