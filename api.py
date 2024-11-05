@@ -255,8 +255,6 @@ async def delete_datasets(request: DeleteDatasetsRequest, token: str = Depends(v
 # Endpoint setup awal untuk raw process vectordb (load dokumen, chunking, dan embedding)
 @app.post("/setup", tags=["setup"])
 async def raw_process(request: ProcessRequest, token: str = Depends(verify_bearer_token)):
-    # Tambahkan log untuk melihat nilai request yang diterima
-    print("Request diterima:", request)
     def get_embbeder():
         if request.embbeder.lower() == "openai":
             return OpenAIEmbeddings(api_key=openai_api_key, model=request.model)
