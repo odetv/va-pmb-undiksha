@@ -58,7 +58,7 @@ average_row['average'] = average_row[['context_precision', 'context_recall', 'fa
 df = pd.concat([df, average_row], ignore_index=True)
 
 
-with pd.ExcelWriter("eval/score_rag.xlsx", engine='xlsxwriter') as writer:
+with pd.ExcelWriter("eval/score_multi_rag.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
     workbook  = writer.book
     worksheet = writer.sheets['Evaluation']
