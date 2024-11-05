@@ -32,7 +32,7 @@ def setup_page():
 
 def process_response(prompt):
     with st.spinner("Sedang memproses, harap tunggu..."):
-        response = build_graph(prompt)
+        _, response = build_graph(prompt)
         msg = re.sub(
             r'(https://aka\.undiksha\.ac\.id/api/ktm/generate/\S*)', 
             r'[Preview URL](\1)',

@@ -3,11 +3,7 @@ import asyncio
 from crawl4ai import AsyncWebCrawler
 from docx import Document
 from docx2pdf import convert
-from dotenv import load_dotenv
-
-
-load_dotenv()
-DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 def save_to_word(url, content):

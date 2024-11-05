@@ -18,14 +18,13 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from main import build_graph
 from utils.scrapper_rss import scrap_news
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 load_dotenv()
 bearer_token = os.getenv("VA_BEARER_TOKEN")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
-DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
-VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
 bearer_token_header = APIKeyHeader(name="Authorization", auto_error=False)
 
 
@@ -368,14 +367,14 @@ async def chat_conversation(request: QuestionRequest, token: str = Depends(verif
     if not request.question:
         raise HTTPException(status_code=400, detail="Pertanyaan tidak boleh kosong.")
     try:
-        answer = build_graph(question)
+        _, answers = build_graph(question)
         return api_response(
             status_code=200,
             success=True,
             message="OK",
             data=[{
                 "question": question,
-                "answer": answer
+                "answer": answers
             }]
         )
     except HTTPException as e:

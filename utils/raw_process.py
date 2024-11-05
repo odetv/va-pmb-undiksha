@@ -2,13 +2,8 @@ import os
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from dotenv import load_dotenv
 from llm import EMBEDDER
-
-
-load_dotenv()
-DATASETS_DIR = os.getenv("APP_DATASETS_DIR")
-VECTORDB_DIR = os.getenv("APP_VECTORDB_DIR")
+from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
 # Check Directory Datasets & Vector Database
