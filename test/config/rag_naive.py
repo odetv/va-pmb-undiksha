@@ -49,4 +49,4 @@ def rag_naive(question):
 
 
 # DEBUG QUERY EXAMPLES
-# rag("siapa rektor undiksha?")
+# rag_naive("Buatkan saya kode program untuk membuat deret Fibonacci")

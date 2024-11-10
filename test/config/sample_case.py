@@ -1,12 +1,4 @@
-questions = [
-    "Siapa rektor undiksha?",
-    "Berapa ada fakultas?",
-    "Ada berapa jalur penerimaan mahasiswa baru?"
-]
+import pandas as pd
 
-
-ground_truths = [
-    "Prof. Dr. I Wayan Lasmawan, M.Pd.",
-    "Universitas Pendidikan Ganesha memiliki 9 fakultas.",
-    "Ada 3 jalur penerimaan mahasiswa baru."
-]
+questions = pd.read_excel('test/config/list_qa.xlsx', sheet_name='QA', usecols='D')['QUESTION'].tolist()
+ground_truths = pd.read_excel('test/config/list_qa.xlsx', sheet_name='QA', usecols='E')['ANSWER'].tolist()
