@@ -115,6 +115,7 @@ def show_kelulusan_pmb(state: AgentState):
         if e.response is not None:
             print("Detail kesalahan:", e.response.text)
         raise SystemExit(f"Terjadi kesalahan saat mengakses API kelulusan: {e}")
+        # return "Maaf sedang terjadi kesalahan pada sistem."
 
 
 

@@ -14,7 +14,7 @@ class AgentState(TypedDict):
     generalContext: str
     generalGraderDocs: str
     generalHallucinationCount: int
-    generalIsHallucination: str
+    isHallucination: str
     responseGeneral: str
     checkKelulusan: str
     noPendaftaran: str
