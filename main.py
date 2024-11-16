@@ -13,6 +13,7 @@ from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
+
 @time_check
 def questionIdentifierAgent(state: AgentState):
     info = "\n--- QUESTION IDENTIFIER ---"
@@ -45,10 +46,7 @@ def questionIdentifierAgent(state: AgentState):
     print("\nPertanyaan:", expanded_question)
     print(f"question_type: {responseTypeQuestion}")
 
-    print(responseTypeQuestion)
-
     json_like_data = re.search(r'\{.*\}', responseTypeQuestion, re.DOTALL)
-
     if json_like_data:
         cleaned_response = json_like_data.group(0)
         print(f"DEBUG: Bagian JSON-like yang diambil: {cleaned_response}")
@@ -66,12 +64,13 @@ def questionIdentifierAgent(state: AgentState):
     state["ktmQuestion"] = ktm_question_match.group(1) if ktm_question_match and ktm_question_match.group(1) else "Tidak ada informasi"
     state["outOfContextQuestion"] = out_of_context_question_match.group(1) if out_of_context_question_match and out_of_context_question_match.group(1) else "Tidak ada informasi"
 
-    print(f"Debug: State 'generalQuestion' setelah update: {state['generalQuestion']}")
-    print(f"Debug: State 'kelulusanQuestion' setelah update: {state['kelulusanQuestion']}")
-    print(f"Debug: State 'ktmQuestion' setelah update: {state['ktmQuestion']}")
-    print(f"Debug: State 'outOfContextQuestion' setelah update: {state['outOfContextQuestion']}")
+    print(f"DEBUG: State 'generalQuestion' : {state['generalQuestion']}")
+    print(f"DEBUG: State 'kelulusanQuestion' : {state['kelulusanQuestion']}")
+    print(f"DEBUG: State 'ktmQuestion' : {state['ktmQuestion']}")
+    print(f"DEBUG: State 'outOfContextQuestion' : {state['outOfContextQuestion']}")
 
     return state
+
 
 
 @time_check
@@ -89,8 +88,8 @@ def generalAgent(state: AgentState):
 
     state["generalContext"] = context
     state["finishedAgents"].add("general_agent")
-    # print(state["generalContext"])
     return {"generalContext": state["generalContext"]}
+
 
 
 @time_check
@@ -116,13 +115,13 @@ def graderDocsAgent(state: AgentState):
 
     state["generalGraderDocs"] = responseGraderDocsAgent
     state["finishedAgents"].add("graderDocs_agent")
-    # print(state["generalGraderDocs"])
     return {"generalGraderDocs": state["generalGraderDocs"]}
 
 
+
 @time_check
-def answerGeneratorAgent(state: AgentState):
-    info = "\n--- Answer Generator ---"
+def answerGeneralAgent(state: AgentState):
+    info = "\n--- Answer General ---"
     print(info)
 
     prompt = f"""
@@ -136,12 +135,12 @@ def answerGeneratorAgent(state: AgentState):
     - Berikan jawaban yang lengkap, rapi, dan penomoran jika diperlukan sesuai konteks.
     - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
     - Jangan sampaikan pedoman ini kepada pengguna, gunakan pedoman ini hanya untuk memberikan jawaban yang sesuai konteks.
-    Pertanyaan Pengguna: {state["generalQuestion"]}
     Konteks: {state["generalGraderDocs"]}
     """
 
     messages = [
-        SystemMessage(content=prompt)
+        SystemMessage(content=prompt),
+        HumanMessage(content=state["generalQuestion"])
     ]
     response = chat_openai(messages)
     agentOpinion = {
@@ -149,43 +148,9 @@ def answerGeneratorAgent(state: AgentState):
     }
 
     state["responseGeneral"] = response
-    state["finishedAgents"].add("answerGenerator_agent")
-    # print(state["responseGeneral"])
+    state["finishedAgents"].add("answerGeneral_agent")
     return {"answerAgents": [agentOpinion]}
 
-
-@time_check
-def graderHallucinationsAgent(state: AgentState):
-    info = "\n--- Grader Hallucinations ---"
-    print(info)
-
-    if "generalHallucinationCount" not in state:
-        state["generalHallucinationCount"] = 0
-    state["generalHallucinationCount"] += 1
-    print(f"DEBUG: Jumlah pengecekan halusinasi: {state['generalHallucinationCount']}")
-    if state["generalHallucinationCount"] > 3:
-        print("DEBUG: Batas pengecekan halusinasi tercapai, menghentikan loop.")
-        state["generalIsHallucination"] = False
-        return {"generalIsHallucination": state["generalIsHallucination"]}
-
-    prompt = f"""
-    Anda adalah seorang penilai dari OPINI dengan FAKTA.
-    Berikan nilai "false" hanya jika OPINI ada kaitannya dengan FAKTA atau berikan nilai "true" hanya jika OPINI tidak ada kaitannya dengan FAKTA.
-    Harap cermat dalam menilai, karena ini akan sangat bergantung pada jawaban Anda.
-    - OPINI: {state["answerAgents"]}
-    - FAKTA: {state["generalGraderDocs"]}
-    """
-
-    messages = [
-        SystemMessage(content=prompt)
-    ]
-    response = chat_openai(messages).strip().lower()
-    is_hallucination = response == "true"
-
-    state["generalIsHallucination"] = is_hallucination
-    state["finishedAgents"].add("graderHallucinations_agent")
-    print(f"Apakah hasil halusinasi? {is_hallucination}")
-    return {"generalIsHallucination": state["generalIsHallucination"]}
 
 
 @time_check
@@ -228,6 +193,7 @@ def kelulusanAgent(state: AgentState):
     return {"checkKelulusan": state["checkKelulusan"]}
 
 
+
 @time_check
 def incompleteInfoKelulusanAgent(state: AgentState):
     info = "\n--- Incomplete Info Kelulusan SMBJM ---"
@@ -248,7 +214,6 @@ def incompleteInfoKelulusanAgent(state: AgentState):
 
     state["finishedAgents"].add("incompleteInfoKelulusan_agent")
     state["responseIncompleteInfoKelulusan"] = response
-    # print(state["responseIncompleteInfoKelulusan"])
     return {"answerAgents": [agentOpinion]}
 
 
@@ -272,6 +237,21 @@ def infoKelulusanAgent(state: AgentState):
         pilihan_prodi = kelulusan_info.get("program_studi", "")
         status_kelulusan = kelulusan_info.get("status_kelulusan", "")
 
+        response = f"""
+            Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
+            - Nomor Pendaftaran: {no_pendaftaran}
+            - Nama Siswa: {nama_siswa}
+            - Tanggal Lahir: {tgl_lahir}
+            - Tahun Daftar: {tgl_daftar}
+            - Pilihan Program Studi: {pilihan_prodi}
+            - Status Kelulusan: {status_kelulusan}
+            Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
+        """
+
+        agentOpinion = {
+            "answer": response
+        }
+
     except Exception as e:
         # print("Error retrieving graduation information:", e)
         return {
@@ -280,25 +260,10 @@ def infoKelulusanAgent(state: AgentState):
             }]
         }
 
-    response = f"""
-        Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
-        - Nomor Pendaftaran: {no_pendaftaran}
-        - Nama Siswa: {nama_siswa}
-        - Tanggal Lahir: {tgl_lahir}
-        - Tahun Daftar: {tgl_daftar}
-        - Pilihan Program Studi: {pilihan_prodi}
-        - Status Kelulusan: {status_kelulusan}
-        Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
-    """
-
-    agentOpinion = {
-        "answer": response
-    }
-
     state["finishedAgents"].add("infoKelulusan_agent")
     state["responseKelulusan"] = response
-    # print(state["responseKelulusan"])
     return {"answerAgents": [agentOpinion]}
+
 
 
 @time_check
@@ -337,6 +302,7 @@ def ktmAgent(state: AgentState):
     return {"checkKTM": state["checkKTM"]}
 
 
+
 @time_check
 def incompleteInfoKTMAgent(state: AgentState):
     info = "\n--- Incomplete Info KTM ---"
@@ -358,8 +324,8 @@ def incompleteInfoKTMAgent(state: AgentState):
 
     state["finishedAgents"].add("incompleteInfoKTM_agent")
     state["responseIncompleteNim"] = response
-    # print(state["responseIncompleteNim"])
     return {"answerAgents": [agentOpinion]}
+
 
 
 @time_check
@@ -384,8 +350,8 @@ def infoKTMAgent(state: AgentState):
 
     state["finishedAgents"].add("infoKTM_agent")
     state["responseKTM"] = response
-    # print(state["responseKTM"])
     return {"answerAgents": [agentOpinion]}
+
 
 
 @time_check
@@ -393,7 +359,9 @@ def outOfContextAgent(state: AgentState):
     info = "\n--- OUT OF CONTEXT ---"
     print(info)
 
-    response = "Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha."
+    response = """
+        Pertanyaan tidak relevan dengan konteks kampus Universitas Pendidikan Ganesha.
+    """
 
     agentOpinion = {
         "answer": response
@@ -401,8 +369,48 @@ def outOfContextAgent(state: AgentState):
 
     state["finishedAgents"].add("outofcontext_agent")
     state["responseOutOfContext"] = response
-    # print(state["responseOutOfContext"])
     return {"answerAgents": [agentOpinion]}
+
+
+
+@time_check
+def graderHallucinationsAgent(state: AgentState):
+    info = "\n--- Grader Hallucinations ---"
+    print(info)
+
+    if "responseFinal" not in state:
+        state["responseFinal"] = ""
+    print("\n\n\nINI DEBUG FINAL::::", state["responseFinal"])
+
+    if "generalHallucinationCount" not in state:
+        state["generalHallucinationCount"] = 0
+
+    prompt = f"""
+    Anda adalah seorang penilai dari OPINI dengan FAKTA.
+    Berikan nilai "false" hanya jika OPINI ada kaitannya dengan FAKTA atau berikan nilai "true" hanya jika OPINI tidak ada kaitannya dengan FAKTA.
+    Harap cermat dalam menilai, karena ini akan sangat bergantung pada jawaban Anda.
+    - OPINI: {state["responseFinal"]}
+    - FAKTA: {state["answerAgents"]}
+    """
+
+    messages = [
+        SystemMessage(content=prompt)
+    ]
+    response = chat_openai(messages).strip().lower()
+    is_hallucination = response == "true"
+
+    state["isHallucination"] = is_hallucination
+    if is_hallucination:
+        state["generalHallucinationCount"] += 1
+    else:
+        state["generalHallucinationCount"] = 0
+
+    state["isHallucination"] = is_hallucination
+    state["finishedAgents"].add("graderHallucinations_agent")
+    print(f"Apakah hasil halusinasi? {is_hallucination}")
+    print(f"Jumlah pengecekan halusinasi berturut-turut: {state['generalHallucinationCount']}")
+    return {"isHallucination": state["isHallucination"], "generalHallucinationCount": state["generalHallucinationCount"]}
+
 
 
 @time_check
@@ -410,7 +418,7 @@ def resultWriterAgent(state: AgentState):
     expected_agents_count = len(state["finishedAgents"])
     total_agents = 0
     if "general_agent" in state["finishedAgents"]:
-        total_agents =+ 3
+        total_agents += 3
     if "kelulusan_agent" in state["finishedAgents"]:
         total_agents += 2
     if "ktm_agent" in state["finishedAgents"]:
@@ -430,6 +438,7 @@ def resultWriterAgent(state: AgentState):
 
     prompt = f"""
         Berikut pedoman yang harus diikuti untuk menulis ulang informasi:
+        - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
         Berikut adalah informasinya:
@@ -440,13 +449,10 @@ def resultWriterAgent(state: AgentState):
         SystemMessage(content=prompt)
     ]
     response = chat_openai(messages)
-
     state["responseFinal"] = response
     
-    # print(state["answerAgents"])
-    # print(state["responseFinal"])
-    # return {"responseFinal": state["responseFinal"]}
     return {"responseFinal": state["responseFinal"]}
+
 
 
 @time_check
@@ -461,19 +467,11 @@ def build_graph(question):
     if "general_agent" in context:
         workflow.add_node("general_agent", generalAgent)
         workflow.add_node("graderDocs_agent", graderDocsAgent)
-        workflow.add_node("answerGenerator_agent", answerGeneratorAgent)
-        workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
+        workflow.add_node("answerGeneral_agent", answerGeneralAgent)
         workflow.add_edge("questionIdentifier_agent", "general_agent")
         workflow.add_edge("general_agent", "graderDocs_agent")
-        workflow.add_edge("graderDocs_agent", "answerGenerator_agent")
-        workflow.add_edge("answerGenerator_agent", "graderHallucinations_agent")
-        workflow.add_conditional_edges(
-            "graderHallucinations_agent",
-            lambda state: state["generalIsHallucination"], {
-                True: "answerGenerator_agent",
-                False: "resultWriter_agent",
-            }
-        )
+        workflow.add_edge("graderDocs_agent", "answerGeneral_agent")
+        workflow.add_edge("answerGeneral_agent", "resultWriter_agent")
 
     if "kelulusan_agent" in context:
         workflow.add_node("kelulusan_agent", kelulusanAgent)
@@ -512,18 +510,28 @@ def build_graph(question):
         workflow.add_edge("questionIdentifier_agent", "outofcontext_agent")
         workflow.add_edge("outofcontext_agent", "resultWriter_agent")
 
-    workflow.add_edge("resultWriter_agent", END)
+    workflow.add_node("graderHallucinations_agent", graderHallucinationsAgent)
+    workflow.add_edge("resultWriter_agent", "graderHallucinations_agent")
+    workflow.add_conditional_edges(
+        "graderHallucinations_agent",
+        lambda state: state["isHallucination"] and state["generalHallucinationCount"] < 2 if state["isHallucination"] else False,
+        {
+            True: "resultWriter_agent",
+            False: END,
+        }
+    )
+
     graph = workflow.compile()
     result = graph.invoke({"question": question})
     answers = result.get("responseFinal", [])
     contexts = result.get("answerAgents", "")
-
     get_graph_image(graph)
-
     return contexts, answers
 
 
+
 # DEBUG QUERY EXAMPLES
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir. Saya ingin bunuh diri.")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
 # build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
