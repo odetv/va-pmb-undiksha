@@ -11,12 +11,10 @@ langgraph
 langchain-core
 langchain-openai
 langchain-ollama
-langchain-groq
 langchain-community
 pytest
 typing-extensions
 faiss-cpu==1.8.0
-groq
 streamlit
 pandas
 crawl4ai

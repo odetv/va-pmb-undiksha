@@ -2,7 +2,7 @@ import os
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from llm import EMBEDDER
+from utils.llm import embedder
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
@@ -28,5 +28,6 @@ chunks = text_splitter.split_documents(documents)
 
 
 # 3. Process Embeddings
+_, EMBEDDER = embedder()
 vectordb = FAISS.from_documents(chunks, EMBEDDER)
 vectordb.save_local(VECTORDB_DIR)

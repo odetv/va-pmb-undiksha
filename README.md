@@ -97,19 +97,20 @@ Install Requirements
 Buat dan Lengkapi file environment variabel (.env)
 
 ```bash
-  OPENAI_API_KEY=""
-  GROQ_API_KEY=""
-  OLLAMA_BASE_URL=""
-  API_KTM_UNDIKSHA_AUTH_URL=""
-  API_KTM_UNDIKSHA_USERNAME=""
-  API_KTM_UNDIKSHA_PASSWORD=""
-  API_KTM_UNDIKSHA_RESPONSE_URL=""
-  API_KELULUSAN_UNDIKSHA_AUTH_URL=""
-  API_KELULUSAN_UNDIKSHA_USERNAME=""
-  API_KELULUSAN_UNDIKSHA_PASSWORD=""
-  API_KELULUSAN_UNDIKSHA_RESPONSE_URL=""
-  STREAMLIT_KEY_ADMIN=""
-  VA_BEARER_TOKEN=""
+  OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+  OLLAMA_BASE_URL="YOUR_OLLAMA_BASE_URL"
+  API_KTM_UNDIKSHA_AUTH_URL="AUTH_URL_API_KTM_UNDIKSHA"
+  API_KTM_UNDIKSHA_USERNAME="USERNAME_API_KTM_UNDIKSHA"
+  API_KTM_UNDIKSHA_PASSWORD="PASSWORD_API_KTM_UNDIKSHA"
+  API_KTM_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KTM_UNDIKSHA"
+  API_KELULUSAN_UNDIKSHA_AUTH_URL="AUTH_URL_API_KELULUSAN_UNDIKSHA"
+  API_KELULUSAN_UNDIKSHA_USERNAME="USERNAME_API_KELULUSAN_UNDIKSHA"
+  API_KELULUSAN_UNDIKSHA_PASSWORD="PASSWORD_API_KELULUSAN_UNDIKSHA"
+  API_KELULUSAN_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KELULUSAN_UNDIKSHA"
+  STREAMLIT_KEY_ADMIN="ADMIN_KEY_TO_ACCESS_DEBUG_STREAMLIT"
+  VA_BEARER_TOKEN="TOKEN_FOR_BUILD_API_VIRTUAL_ASSISTANT"
+  VA_LLM_SERVICE="OPENAI_OR_OLLAMA"
+  VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
 Jalankan dengan Web Streamlit (Debug: `/debug`)
@@ -120,7 +121,7 @@ Jalankan dengan Web Streamlit (Debug: `/debug`)
 
 Atau
 
-Jalankan dengan API (Dokumentasi: `/docs` atau `/openapispmb.json`)
+Jalankan dengan API (Dokumentasi: `/docs` atau `/openapipmb.json`)
 
 ```bash
   uvicorn api.api:app --reload --port XXXX
@@ -128,6 +129,67 @@ Jalankan dengan API (Dokumentasi: `/docs` atau `/openapispmb.json`)
 
 Contoh Pertanyaan
 [example_question.txt](example_question.txt)
+
+## Struktur Project
+
+```
+va-pmb-undiksha
+├─ api
+│  ├─ logs
+│  │  ├─ logs_activity.xlsx
+│  │  └─ logs_configllm.xlsx
+│  └─ api.py
+├─ app
+│  ├─ .streamlit
+│  │  └─ config.toml
+│  ├─ pages
+│  │  └─ Debug.py
+│  └─ Home.py
+├─ assets
+│  └─ images
+│     └─ Images.jpg
+├─ src
+│  ├─ config
+│  │  └─ config.py
+│  ├─ datasets
+│  │  └─ Datasets.pdf
+│  ├─ graph
+│  │  └─ graph-va-pmb-undiksha.png
+│  └─ vectordb
+│     ├─ index.faiss
+│     └─ index.pkl
+├─ test
+│  ├─ config
+│  │  ├─ list_qa.xlsx
+│  │  ├─ rag_adaptive.py
+│  │  ├─ rag_naive.py
+│  │  └─ sample_case.py
+│  ├─ scores_ragas
+│  │  ├─ final
+│  │  │  ├─ score_test_adaptive.xlsx
+│  │  │  └─ score_test_naive.xlsx
+│  │  ├─ score_test_adaptive.xlsx
+│  │  └─ score_test_naive.xlsx
+│  ├─ test_adaptive.py
+│  └─ test_naive.py
+├─ utils
+│  ├─ agent_state.py
+│  ├─ api_undiksha.py
+│  ├─ create_graph_image.py
+│  ├─ debug_time.py
+│  ├─ expansion.py
+│  ├─ llm.py
+│  ├─ logging.py
+│  ├─ raw_process.py
+│  ├─ scrapper_datasets.py
+│  └─ scrapper_rss.py
+├─ .env.example
+├─ .gitignore
+├─ example_question.txt
+├─ main.py
+├─ README.md
+└─ requirements.txt
+```
 
 ## Referensi
 

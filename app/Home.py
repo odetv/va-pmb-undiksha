@@ -76,7 +76,7 @@ def display_example_questions():
 
 def display_chat_history():
     for msg in st.session_state.messages:
-        st.chat_message(msg["role"], avatar="assets/images/avatar-va.png").write(msg["raw_content"])
+        st.chat_message(msg["role"]).write(msg["raw_content"])
         for img_url in msg.get("images", []):
             st.image(img_url, use_column_width=False)
 
@@ -85,10 +85,10 @@ def handle_user_input():
     if prompt := st.chat_input("Ketik pertanyaan Anda di sini..."):
         add_message("user", prompt)
         st.session_state['user_question'] = prompt
-        st.chat_message("user", avatar="assets/images/avatar-user.png").write(prompt)
+        st.chat_message("user").write(prompt)
         response = process_response(prompt)
         add_message("assistant", response["msg"], response["html_msg"], response["images"])
-        st.chat_message("assistant", avatar="assets/images/avatar-va.png").markdown(response["msg"])
+        st.chat_message("assistant").markdown(response["msg"])
         for img_url in response["images"]:
             st.image(img_url, use_column_width=False)
 
@@ -106,3 +106,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# DEBUG RUNNING
+# streamlit run app/Home.py

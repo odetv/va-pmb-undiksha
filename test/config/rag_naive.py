@@ -5,7 +5,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.llm import chat_openai, chat_ollama, chat_groq
+from utils.llm import chat_llm
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
@@ -39,7 +39,7 @@ def rag_naive(question):
         SystemMessage(content=prompt),
         HumanMessage(content=question)
     ]
-    answer = chat_openai(messages)
+    answer = chat_llm(messages)
 
     # print("DEBUG:QUESTION:::", question)
     # print("DEBUG:CONTEXT:::", context)
