@@ -18,7 +18,8 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from main import build_graph
 from utils.scrapper_rss import scrap_news
-from utils.logging import generate_id, log
+from utils.logging import generate_id, log_activity, log_configllm
+from openpyxl import load_workbook
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
 
@@ -48,10 +49,14 @@ class QuestionResponse(BaseModel):
 class DeleteDatasetsRequest(BaseModel):
     filenames: List[str]
 class ProcessRequest(BaseModel):
+    llm: str
+    model_llm: str
     embbeder: str
-    model: str
-    chunksize: int
-    chunkoverlap: int
+    model_embedder: str
+    chunk_size: int
+    chunk_overlap: int
+    class Config:
+        protected_namespaces = ()
 
 
 # Metadata API
@@ -66,7 +71,11 @@ tags_metadata = [
     },
     {
         "name": "setup",
-        "description": "Proses load dokumen, chunking, dan embedding."
+        "description": "Proses load dokumen, chunking, embedding, dan membuat vector database."
+    },
+    {
+        "name": "checkmodel",
+        "description": "Cek parameter model yang digunakan."
     },
     {
         "name": "news",
@@ -87,7 +96,7 @@ tags_metadata = [
 app = FastAPI(
     openapi_tags=tags_metadata,
     title="PMB Undiksha",
-    summary="API PMB Undiksha.",
+    summary="API PMB Undiksha",
     version="0.0.1",
     docs_url="/docs",
     redoc_url=None,
@@ -111,7 +120,7 @@ def api_response(status_code: int, success: bool, message: str, data=None):
 # Enpoint untuk base url root API request
 @app.get("/", tags=["root"])
 async def root(request_http: Request, token: str = Depends(verify_bearer_token)):
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request_http.method} {request_http.url.path}",
@@ -137,7 +146,7 @@ async def list_datasets(request_http: Request, token: str = Depends(verify_beare
     ]
     if not datasets:
         raise HTTPException(status_code=404, detail="Folder datasets kosong atau tidak ada file PDF/Word.")
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request_http.method} {request_http.url.path}",
@@ -163,7 +172,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
         def iter_file():
             with open(file_path, "rb") as file:
                 yield from file
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -173,7 +182,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
         })
         return StreamingResponse(iter_file(), media_type="application/pdf", headers={"Content-Disposition": f"inline; filename={filename}"})
     elif filename.lower().endswith((".doc", ".docx")):
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -202,7 +211,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
     if not uploaded_files:
         raise HTTPException(status_code=400, detail="Tidak ada file yang diunggah atau file yang diunggah tidak didukung.")
     if unsupported_files:
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -217,7 +226,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
             data={"uploaded_files": uploaded_files, "unsupported_files": unsupported_files}
         )
     else:
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -250,7 +259,7 @@ async def update_dataset(
     os.remove(original_file_path)
     with open(new_file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request_http.method} {request_http.url.path}",
@@ -283,7 +292,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
         else:
             not_found_files.append(filename)
     if not_found_files:
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -300,7 +309,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
     if not deleted_files:
         raise HTTPException(status_code=400, detail="Tidak ada file yang dipilih.")
     else:
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -319,22 +328,41 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
 # Endpoint setup awal untuk raw process vectordb (load dokumen, chunking, dan embedding)
 @app.post("/setup", tags=["setup"])
 async def raw_process(request_http: Request, request: ProcessRequest, token: str = Depends(verify_bearer_token)):
-    def get_embbeder():
-        if request.embbeder.lower() == "openai":
-            return OpenAIEmbeddings(api_key=openai_api_key, model=request.model)
-        elif request.embbeder.lower() == "ollama":
-            return OllamaEmbeddings(base_url=ollama_base_url, model=request.model)
-        else:
-            raise HTTPException(status_code=400, detail="Embbeder tidak valid. Gunakan 'openai' atau 'ollama'.")
+    if not request.llm:
+        raise HTTPException(status_code=400, detail="LLM harus diisi dengan sesuai.")
+    if not request.model_llm:
+        raise HTTPException(status_code=400, detail="Model LLM harus diisi dengan sesuai.")
+    valid_llm = ["openai", "ollama"]
+    if request.llm not in valid_llm:
+        raise HTTPException(status_code=400, detail="LLM harus 'openai' atau 'ollama'.")
+    valid_model_llm = {
+        "openai": ["gpt-4o", "gpt-4o-mini"],
+        "ollama": ["gemma2", "llama3"]
+    }
+    if request.model_llm not in valid_model_llm.get(request.llm, []):
+        raise HTTPException(status_code=400, detail=f"Model LLM untuk '{request.llm}' harus salah satu dari {valid_model_llm[request.llm]}.")
     if not request.embbeder:
         raise HTTPException(status_code=400, detail="Embbeder harus diisi dengan sesuai.")
-    if not request.model:
-        raise HTTPException(status_code=400, detail="Model harus diisi dengan sesuai.")
-    if request.chunksize <= 0:
-        raise HTTPException(status_code=400, detail="Chunksize harus diisi nilai lebih dari 0.")
-    if request.chunkoverlap <= 0:
-        raise HTTPException(status_code=400, detail="Chunkoverlap harus diisi nilai lebih dari 0.")
-
+    if not request.model_embedder:
+        raise HTTPException(status_code=400, detail="Model Embedder harus diisi dengan sesuai.")
+    valid_embedder = ["openai", "ollama"]
+    if request.embbeder not in valid_embedder:
+        raise HTTPException(status_code=400, detail="Embedder harus 'openai' atau 'ollama'.")
+    valid_embedder_model = {
+        "openai": ["text-embedding-3-large", "text-embedding-3-small"],
+        "ollama": ["bge-m3", "nomic"]
+    }
+    if request.model_embedder not in valid_embedder_model.get(request.embbeder, []):
+        raise HTTPException(status_code=400, detail=f"Model Embedder untuk '{request.embbeder}' harus salah satu dari {valid_embedder_model[request.embbeder]}.")
+    def get_embbeder():
+        if request.embbeder.lower() == "openai":
+            return OpenAIEmbeddings(api_key=openai_api_key, model=request.model_embedder)
+        elif request.embbeder.lower() == "ollama":
+            return OllamaEmbeddings(base_url=ollama_base_url, model=request.model_embedder)
+    if request.chunk_size <= 0:
+        raise HTTPException(status_code=400, detail="Chunk Size harus diisi nilai lebih dari 0.")
+    if request.chunk_overlap <= 0:
+        raise HTTPException(status_code=400, detail="Chunk Overlap harus diisi nilai lebih dari 0.")
     EMBEDDER = get_embbeder()
     if not os.path.exists(DATASETS_DIR):
         os.makedirs(DATASETS_DIR)
@@ -344,7 +372,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         loader = PyPDFDirectoryLoader(DATASETS_DIR)
         documents = loader.load()
         if not documents:
-            log({
+            log_activity({
                 "id": generate_id(),
                 "timestamp": current_time,
                 "method": f"{request_http.method} {request_http.url.path}",
@@ -362,8 +390,8 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         raise HTTPException(status_code=500, detail=f"Error saat memuat dokumen: {str(e)}")
     try:
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=request.chunksize,
-            chunk_overlap=request.chunkoverlap
+            chunk_size=request.chunk_size,
+            chunk_overlap=request.chunk_overlap
         )
         chunks = text_splitter.split_documents(documents)
     except Exception as e:
@@ -373,26 +401,81 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         vectordb.save_local(VECTORDB_DIR)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saat menyimpan embeddings: {str(e)}")
-    log({
+    log_configllm({
+        "timestamp": current_time,
+        "llm": request.llm,
+        "model_llm": request.model_llm,
+        "embbeder": request.embbeder,
+        "model_embedder": request.model_embedder,
+        "chunk_size": request.chunk_size,
+        "chunk_overlap": request.chunk_overlap,
+        "total_chunks": len(chunks)
+    })
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
-        "description": f"Proses dokumen berhasil diselesaikan dan embeddings disimpan.\n###\nembbeder:{request.embbeder}\n###\nmodel:{request.model}\n###\nchunksize:{request.chunksize}\n###\nchunkoverlap:{request.chunkoverlap}\n###\ntotal_chunks:{len(chunks)}"
+        "description": f"Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.\n###\ntimestamp:{current_time}llm:{request.llm}\n###\nmodel_llm:{request.model_llm}\n###\nembbeder:{request.embbeder}\n###\nmodel_embedder:{request.model_embedder}\n###\nchunk_size:{request.chunk_size}\n###\nchunk_overlap:{request.chunk_overlap}\n###\ntotal_chunks:{len(chunks)}"
     })
     return api_response(
         status_code=200,
         success=True,
-        message="Proses dokumen berhasil diselesaikan dan embeddings disimpan.",
+        message="Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.",
         data={
+            "timestamp": current_time,
+            "llm": request.llm,
+            "model_llm": request.model_llm,
             "embbeder": request.embbeder,
-            "model": request.model,
-            "chunksize": request.chunksize,
-            "chunkoverlap": request.chunkoverlap,
+            "model_embedder": request.model_embedder,
+            "chunk_size": request.chunk_size,
+            "chunk_overlap": request.chunk_overlap,
             "total_chunks": len(chunks)
         }
     )
+
+
+# Endpoint untuk mengecek LLM dan EMBEDDER
+@app.get("/checkmodel", tags=["checkmodel"])
+async def check_model(request_http: Request, token: str = Depends(verify_bearer_token)):
+    try:
+        file_path = "api/logs/log_configllm.xlsx"
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="Tidak ditemukan file log config LLM.")
+        workbook = load_workbook(filename=file_path)
+        sheet = workbook.active
+        last_row = sheet.max_row
+        if last_row < 2:
+            raise HTTPException(status_code=404, detail="Tidak ditemukan data log config LLM.")
+        data = {
+            "last_update": sheet.cell(row=last_row, column=1).value or "Unknown",
+            "llm": sheet.cell(row=last_row, column=2).value or "",
+            "model_llm": sheet.cell(row=last_row, column=3).value or "",
+            "embbeder": sheet.cell(row=last_row, column=4).value or "",
+            "model_embedder": sheet.cell(row=last_row, column=5).value or "",
+            "chunk_size": sheet.cell(row=last_row, column=6).value or "",
+            "chunk_overlap": sheet.cell(row=last_row, column=7).value or "",
+            "total_chunks": sheet.cell(row=last_row, column=8).value or ""
+        }
+        log_activity({
+            "id": generate_id(),
+            "timestamp": current_time,
+            "method": f"{request_http.method} {request_http.url.path}",
+            "status_code": 200,
+            "success": True,
+            "description": f"OK\n###\nLog Config LLM:{data}"
+        })
+        return api_response(
+            status_code=200,
+            success=True,
+            message="OK",
+            data=data
+        )
+    except HTTPException as e:
+        raise HTTPException(status_code=e.status_code, detail=f"{e.detail}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"{str(e)}")
 
 
 # Endpoint untuk scrapping berita
@@ -401,7 +484,7 @@ async def scrapping_news(request_http: Request, token: str = Depends(verify_bear
     news_data = scrap_news()
     news_data_json = json.loads(news_data)
     try:
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -426,7 +509,7 @@ async def scrapping_news(request_http: Request, token: str = Depends(verify_bear
 async def visualize_graph(request_http: Request, token: str = Depends(verify_bearer_token)):
     file_path = "src/graph/graph-va-pmb-undiksha.png"
     if os.path.exists(file_path):
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": current_time,
             "method": f"{request_http.method} {request_http.url.path}",
@@ -447,7 +530,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
         raise HTTPException(status_code=400, detail="Pertanyaan tidak boleh kosong.")
     try:
         _, answers = build_graph(question)
-        log({
+        log_activity({
             "id": generate_id(),
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
@@ -468,13 +551,26 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
     except HTTPException as e:
         raise HTTPException(status_code=e.status_code, detail=f"{e.detail}")
     except Exception as e:
-        raise Exception(status_code=500, detail=f"{str(e)}")
+        log_activity({
+            "id": generate_id(),
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "method": f"{request_http.method} {request_http.url.path}",
+            "status_code": 500,
+            "success": False,
+            "description": f"Terjadi kesalahan yang tidak terduga. Pastikan LLM dan Embedder Service yang digunakan pada environment 'ollama' atau 'openai', lakukan proses embedding ulang, dan silahkan coba kembali. Jika masalah ini terus muncul, kemungkinan terdapat masalah pada LLM atau Embedder Service. {str(e)}"
+        })
+        return api_response(
+            status_code=500,
+            success=False,
+            message=f"Terjadi kesalahan yang tidak terduga. Pastikan LLM dan Embedder Service yang digunakan pada environment 'ollama' atau 'openai', lakukan proses embedding ulang, dan silahkan coba kembali. Jika masalah ini terus muncul, kemungkinan terdapat masalah pada LLM atau Embedder Service. {str(e)}",
+            data=None
+        )
 
 
 # Custom handler untuk 404 Not Found
 @app.exception_handler(HTTP_404_NOT_FOUND)
 async def not_found_handler(request: Request, exc: StarletteHTTPException):
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request.method} {request.url.path}",
@@ -493,7 +589,7 @@ async def not_found_handler(request: Request, exc: StarletteHTTPException):
 # Custom handler untuk 405 Method Not Allowed
 @app.exception_handler(HTTP_405_METHOD_NOT_ALLOWED)
 async def method_not_allowed_handler(request: Request, exc: StarletteHTTPException):
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request.method} {request.url.path}",
@@ -512,7 +608,7 @@ async def method_not_allowed_handler(request: Request, exc: StarletteHTTPExcepti
 # General handler untuk HTTP Exception lain
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request.method} {request.url.path}",
@@ -533,7 +629,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
     error_messages = "; ".join([f"{err['loc']}: {err['msg']}" for err in errors])
-    log({
+    log_activity({
         "id": generate_id(),
         "timestamp": current_time,
         "method": f"{request.method} {request.url.path}",

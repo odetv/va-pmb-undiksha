@@ -5,7 +5,7 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage
-from utils.llm import chat_openai, EMBEDDER
+from utils.llm import chat_llm, embedder
 from dotenv import load_dotenv
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
@@ -91,6 +91,7 @@ def embeddings_documents(chunks):
 
         if not os.path.exists(VECTORDB_DIR):
             os.makedirs(VECTORDB_DIR)
+        _, EMBEDDER = embedder()
         vectordb = FAISS.from_documents(chunks, EMBEDDER)
         vectordb.save_local(VECTORDB_DIR)
 
@@ -221,6 +222,7 @@ def query_user_process():
         if user_question:
             st.write(f"Pertanyaan pengguna: {user_question}")
             progress = st.progress(0)
+            _, EMBEDDER = embedder()
             user_embedding = EMBEDDER.embed_query(user_question)
             progress.progress(100)
             st.write("Embeddings pertanyaan berhasil.")
@@ -273,7 +275,7 @@ def query_user_process():
                 messages = [
                     HumanMessage(prompt)
                 ]
-                response = chat_openai(messages)
+                response = chat_llm(messages)
                 st.write(f"Pertanyaan: \n{user_question}")
                 st.write(f"Jawaban: \n{response}")
             else:
