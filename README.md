@@ -2,8 +2,9 @@
 
 ## Ringkasan
 
-![image](assets/images/architecture.jpg)
-Proyek ini mengembangkan Virtual Assistant (VA) Berbasis Multi-Agent LLM dengan Teknik Adaptive-RAG pada Sistem Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan OpenAI sebagai LLM, LangChain untuk proses RAG, Langgraph untuk mengelola Multi-Agent LLM Adaptive-RAG, dan FAISS sebagai vector database. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
+Virtual Assistant Penerimaan Mahasiswa Baru Universitas Pendidikan Ganesha adalah sebuah layanan inovatif yang dirancang untuk mempermudah calon mahasiswa dalam mengakses informasi terkait proses penerimaan mahasiswa baru, mengecek kelulusan jalur mandiri, dan mencetak Kartu Tanda Mahasiswa. Virtual Assistant ini dikembangkan dengan berbasis Multi-Agent LLM yang menggunakan Teknik Adaptive-RAG pada Sistem Penerimaan Mahasiswa Baru (PMB) di Universitas Pendidikan Ganesha (Undiksha). Menggunakan OpenAI sebagai LLM, LangChain untuk proses RAG, Langgraph untuk mengelola Multi-Agent LLM Adaptive-RAG, dan FAISS sebagai vector database. Virtual Assistant ini dirancang untuk memberikan informasi yang akurat dan cepat, meningkatkan efisiensi dan pengalaman pengguna dalam proses penerimaan mahasiswa.
+
+![image](assets/images/architecture.png)
 
 ## Permasalahan
 
@@ -24,16 +25,18 @@ Virtual Assistant PMB Undiksha menawarkan solusi dengan teknologi terkini untuk 
 
 ## Teknologi
 
-- [Python](https://www.python.org/): Bahasa pemrograman untuk membuat Chatbot.
+- [Python](https://www.python.org/): Bahasa pemrograman untuk membuat Virtual Assistant.
 - [Langchain](https://www.langchain.com/): Framework untuk mengelola alur kerja RAG.
-- [Langgraph](https://www.langchain.com/langgraph): Framework untuk Multi Agent pada Langchain.
+- [Langgraph](https://www.langchain.com/langgraph): Framework untuk Multi-Agent LLM pada Langchain.
 - [OpenAI](https://openai.com/): Embedding dan model RAG berbayar.
-- [Streamlit](https://streamlit.io/): Web interface application.
 - [FAISS](https://faiss.ai/): Penyimpanan vector database.
+- [FastAPI](https://fastapi.tiangolo.com/): Framework untuk membuat endpoint API.
+- [Streamlit](https://streamlit.io/): Framework web interface application.
 
 ## Apa itu RAG?
 
 ![image](assets/images/rag.png)
+![image](assets/images/adaptive-rag.jpg)
 Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningkatkan kinerja Large Language Model (LLM) dengan mengakses informasi dari sumber eksternal. Dengan RAG, Virtual Assistant dapat memberikan jawaban yang lebih akurat dan relevan, serta mengurangi kemungkinan halusinasi terhadap suatu informasi.
 
 ## Alur Kerja RAG
@@ -53,7 +56,7 @@ Retrieval-Augmented Generation (RAG) adalah teknik yang dirancang untuk meningka
 
 ## Contoh Implementasi
 
-![image](assets/images/concept.jpg)
+![image](assets/images/graph.png)
 Pertanyaan Pengguna (Kueri) "Apa syarat untuk mendaftar sebagai mahasiswa baru di Undiksha?"
 
 #### 1. Retrieve
@@ -64,7 +67,7 @@ Konteks: "Untuk mendaftar sebagai mahasiswa baru di Undiksha, calon mahasiswa ha
 #### 2. Augment
 
 Gabungkan kuery pengguna dengan konteks yang diambil menggunakan template prompt.
-Prompt: "Syarat-syarat pendaftaran mahasiswa baru di UndikshaSyarat-syarat pendaftaran mahasiswa baru di Undiksha adalah sebagai berikut: sebagai berikut: {context}"
+Prompt: Pertanyaan: {question} dan Konteks: {context}"
 
 #### 3. Generate
 
@@ -106,13 +109,25 @@ Buat dan Lengkapi file environment variabel (.env)
   API_KELULUSAN_UNDIKSHA_PASSWORD=""
   API_KELULUSAN_UNDIKSHA_RESPONSE_URL=""
   STREAMLIT_KEY_ADMIN=""
+  VA_BEARER_TOKEN=""
 ```
 
-Jalankan project
+Jalankan dengan Web Streamlit (Debug: `/debug`)
 
 ```bash
   streamlit run app/Home.py
 ```
+
+Atau
+
+Jalankan dengan API (Dokumentasi: `/docs` atau `/openapispmb.json`)
+
+```bash
+  uvicorn api.api:app --reload --port XXXX
+```
+
+Contoh Pertanyaan
+[example_question.txt](example_question.txt)
 
 ## Referensi
 
@@ -127,7 +142,7 @@ Jalankan project
 9. [A Survey of Techniques for Maximizing LLM Performance](https://youtu.be/ahnGLM-RC1Y)
 10. [18 Lessons teaching everything you need to know to start building Generative AI applications](https://microsoft.github.io/generative-ai-for-beginners/#/)
 11. [How to build a PDF chatbot with Langchain 🦜🔗 and FAISS](https://kevincoder.co.za/how-to-build-a-pdf-chatbot-with-langchain-and-faiss)
-12. [How to build a PDF chatbot with Langchain 🦜🔗 and FAISS](https://heartbeat.comet.ml/how-to-enhance-conversational-agents-with-memory-in-lang-chain-6aadd335b621)
+12. [How to Enhance Conversational Agents with Memory in Lang Chain](https://heartbeat.comet.ml/how-to-enhance-conversational-agents-with-memory-in-lang-chain-6aadd335b621)
 13. [Memory in LLMChain](https://python.langchain.com/v0.1/docs/modules/memory/adding_memory/)
 14. [RunnableWithMessageHistory](https://api.python.langchain.com/en/latest/runnables/langchain_core.runnables.history.RunnableWithMessageHistory.html#langchain_core.runnables.history.RunnableWithMessageHistory)
 15. [Why Assistants API is Slow? Any speed solution?](https://community.openai.com/t/why-assistants-api-is-slow-any-speed-solution/558065)
@@ -139,3 +154,8 @@ Jalankan project
 21. [From Basics to Advanced: Exploring LangGraph](https://towardsdatascience.com/from-basics-to-advanced-exploring-langgraph-e8c1cf4db787)
 22. [Build a Reliable RAG Agent using LangGraph](https://medium.com/the-ai-forum/build-a-reliable-rag-agent-using-langgraph-2694d55995cd)
 23. [LangGraph](https://langchain-ai.github.io/langgraph/)
+24. [Steps In Evaluating Retrieval Augmented Generation (RAG) Pipelines](https://cobusgreyling.medium.com/steps-in-evaluating-retrieval-augmented-generation-rag-pipelines-7d4b393e62b3)
+25. [RAG Evaluation](https://cobusgreyling.medium.com/rag-evaluation-9813a931b3d4)
+26. [Evaluating RAG Applications with RAGAs](https://towardsdatascience.com/evaluating-rag-applications-with-ragas-81d67b0ee31a)
+27. [RAGAS for RAG in LLMs: A Comprehensive Guide to Evaluation Metrics](https://dkaarthick.medium.com/ragas-for-rag-in-llms-a-comprehensive-guide-to-evaluation-metrics-3aca142d6e38)
+28. [Advanced RAG Techniques: What They Are & How to Use Them](https://www.falkordb.com/blog/advanced-rag/)

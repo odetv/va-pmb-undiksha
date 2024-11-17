@@ -531,11 +531,12 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir. Saya ingin bunuh diri.")
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?")
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")
-# build_graph("Siapa rektor undiksha?")
-# build_graph("Saya ingin cetak ktm 2115101014.")
-# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")
-# build_graph("Siapa bupati buleleng?")
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?") # DEBUG AGENT: GENERAL, KTM, KELULUSAN, OUTOFCONTEXT
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")                        # DEBUG AGENT: GENERAL, KTM, KELULUSAN
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")                                                                                                        # DEBUG AGENT: GENERAL, KTM
+# build_graph("Siapa rektor undiksha?")                                                                                                                                         # DEBUG AGENT: GENERAL
+# build_graph("Saya ingin cetak ktm 2115101014.")                                                                                                                               # DEBUG AGENT: KTM-INFO
+# build_graph("Saya ingin cetak ktm")                                                                                                                                           # DEBUG AGENT: KTM-INCOMPLETE
+# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")                                                                                # DEBUG AGENT: KELULUSAN-INFO
+# build_graph("Saya ingin cek kelulusan")                                                                                                                                       # DEBUG AGENT: KELULUSAN-INCOMPLETE
+# build_graph("Siapa bupati buleleng?")                                                                                                                                         # DEBUG AGENT: OUTOFCONTEXT
