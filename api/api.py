@@ -28,7 +28,6 @@ bearer_token = os.getenv("VA_BEARER_TOKEN")
 openai_api_key = os.getenv("OPENAI_API_KEY")
 ollama_base_url = os.getenv("OLLAMA_BASE_URL")
 bearer_token_header = APIKeyHeader(name="Authorization", auto_error=False)
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
 #  Autherization bearer token API
@@ -122,14 +121,14 @@ def api_response(status_code: int, success: bool, message: str, data=None):
 async def root(request_http: Request, token: str = Depends(verify_bearer_token)):
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
-        "description": "API Virtual Assistant Undiksha"
+        "description": "API Virtual Assistant Undiksha "+datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
     return {
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "message": "API Virtual Assistant Undiksha"
     }
 
@@ -148,7 +147,7 @@ async def list_datasets(request_http: Request, token: str = Depends(verify_beare
         raise HTTPException(status_code=404, detail="Folder datasets kosong atau tidak ada file PDF/Word.")
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
@@ -174,7 +173,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
                 yield from file
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -184,7 +183,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
     elif filename.lower().endswith((".doc", ".docx")):
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -213,7 +212,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
     if unsupported_files:
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 207,
             "success": True,
@@ -228,7 +227,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
     else:
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 201,
             "success": True,
@@ -261,7 +260,7 @@ async def update_dataset(
         shutil.copyfileobj(file.file, f)
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
@@ -294,7 +293,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
     if not_found_files:
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 207,
             "success": True,
@@ -311,7 +310,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
     else:
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -337,7 +336,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         raise HTTPException(status_code=400, detail="LLM harus 'openai' atau 'ollama'.")
     valid_model_llm = {
         "openai": ["gpt-4o", "gpt-4o-mini"],
-        "ollama": ["gemma2", "llama3"]
+        "ollama": ["gemma2", "llama3.1"]
     }
     if request.model_llm not in valid_model_llm.get(request.llm, []):
         raise HTTPException(status_code=400, detail=f"Model LLM untuk '{request.llm}' harus salah satu dari {valid_model_llm[request.llm]}.")
@@ -350,7 +349,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         raise HTTPException(status_code=400, detail="Embedder harus 'openai' atau 'ollama'.")
     valid_embedder_model = {
         "openai": ["text-embedding-3-large", "text-embedding-3-small"],
-        "ollama": ["bge-m3", "nomic"]
+        "ollama": ["bge-m3", "mxbai-embed-large"]
     }
     if request.model_embedder not in valid_embedder_model.get(request.embbeder, []):
         raise HTTPException(status_code=400, detail=f"Model Embedder untuk '{request.embbeder}' harus salah satu dari {valid_embedder_model[request.embbeder]}.")
@@ -374,7 +373,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         if not documents:
             log_activity({
                 "id": generate_id(),
-                "timestamp": current_time,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "method": f"{request_http.method} {request_http.url.path}",
                 "status_code": 404,
                 "success": False,
@@ -402,7 +401,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saat menyimpan embeddings: {str(e)}")
     log_configllm({
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "llm": request.llm,
         "model_llm": request.model_llm,
         "embbeder": request.embbeder,
@@ -413,18 +412,18 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
     })
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
-        "description": f"Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.\n###\ntimestamp:{current_time}llm:{request.llm}\n###\nmodel_llm:{request.model_llm}\n###\nembbeder:{request.embbeder}\n###\nmodel_embedder:{request.model_embedder}\n###\nchunk_size:{request.chunk_size}\n###\nchunk_overlap:{request.chunk_overlap}\n###\ntotal_chunks:{len(chunks)}"
+        "description": f"Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.\n###\nllm:{request.llm}\n###\nmodel_llm:{request.model_llm}\n###\nembbeder:{request.embbeder}\n###\nmodel_embedder:{request.model_embedder}\n###\nchunk_size:{request.chunk_size}\n###\nchunk_overlap:{request.chunk_overlap}\n###\ntotal_chunks:{len(chunks)}"
     })
     return api_response(
         status_code=200,
         success=True,
         message="Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.",
         data={
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "llm": request.llm,
             "model_llm": request.model_llm,
             "embbeder": request.embbeder,
@@ -460,7 +459,7 @@ async def check_model(request_http: Request, token: str = Depends(verify_bearer_
         }
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -486,7 +485,7 @@ async def scrapping_news(request_http: Request, token: str = Depends(verify_bear
     try:
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -511,7 +510,7 @@ async def visualize_graph(request_http: Request, token: str = Depends(verify_bea
     if os.path.exists(file_path):
         log_activity({
             "id": generate_id(),
-            "timestamp": current_time,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -572,7 +571,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
 async def not_found_handler(request: Request, exc: StarletteHTTPException):
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request.method} {request.url.path}",
         "status_code": 404,
         "success": False,
@@ -591,7 +590,7 @@ async def not_found_handler(request: Request, exc: StarletteHTTPException):
 async def method_not_allowed_handler(request: Request, exc: StarletteHTTPException):
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request.method} {request.url.path}",
         "status_code": 405,
         "success": False,
@@ -610,7 +609,7 @@ async def method_not_allowed_handler(request: Request, exc: StarletteHTTPExcepti
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request.method} {request.url.path}",
         "status_code": exc.status_code,
         "success": False,
@@ -631,7 +630,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     error_messages = "; ".join([f"{err['loc']}: {err['msg']}" for err in errors])
     log_activity({
         "id": generate_id(),
-        "timestamp": current_time,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "method": f"{request.method} {request.url.path}",
         "status_code": 422,
         "success": False,
