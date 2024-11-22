@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, HTTPException, Depends, Request, UploadFile, File, Form
 from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
@@ -115,6 +116,11 @@ app.add_middleware(
 )
 
 
+# Helper untuk mendapatkan waktu GMT+8
+def get_current_time():
+    return datetime.now(ZoneInfo("Asia/Makassar")).strftime("%Y-%m-%d %H:%M:%S")
+
+
 # Format API response
 def api_response(status_code: int, success: bool, message: str, data=None):
     return JSONResponse(
@@ -131,25 +137,27 @@ def api_response(status_code: int, success: bool, message: str, data=None):
 # Enpoint untuk base url root API request
 @app.get("/", tags=["root"])
 async def root(request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
-        "description": "API Virtual Assistant Undiksha "+datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "description": "API Virtual Assistant Undiksha "+timestamp
     })
     return api_response(
         status_code=200,
         success=True,
         message="OK",
-        data={"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "description": "API Virtual Assistant Undiksha"}
+        data={"timestamp": timestamp, "description": "API Virtual Assistant Undiksha"}
     )
 
 
 # Endpoint untuk melihat daftar file (List)
 @app.get("/datasets/list", tags=["datasets"])
 async def list_datasets(request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     if not os.path.exists(DATASETS_DIR):
         os.makedirs(DATASETS_DIR)
         raise HTTPException(status_code=404, detail="Folder datasets dibuat, tetapi masih kosong.")
@@ -161,7 +169,7 @@ async def list_datasets(request_http: Request, token: str = Depends(verify_beare
         raise HTTPException(status_code=404, detail="Folder datasets kosong atau tidak ada file PDF/Word.")
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
@@ -178,6 +186,7 @@ async def list_datasets(request_http: Request, token: str = Depends(verify_beare
 # Endpoint untuk membaca konten file tertentu (Read)
 @app.get("/datasets/read/{filename}", tags=["datasets"])
 async def read_datasets(request_http: Request, filename: str, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     file_path = os.path.join(DATASETS_DIR, filename)
     if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="File tidak ditemukan.")
@@ -187,7 +196,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
                 yield from file
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -197,7 +206,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
     elif filename.lower().endswith((".doc", ".docx")):
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -211,6 +220,7 @@ async def read_datasets(request_http: Request, filename: str, token: str = Depen
 # Endpoint untuk mengunggah file PDF/Word single atau multiple files (Create)
 @app.post("/datasets/upload", tags=["datasets"])
 async def upload_datasets(request_http: Request, files: List[UploadFile] = File(...), token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     uploaded_files = []
     unsupported_files = []
     for file in files:
@@ -226,7 +236,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
     if unsupported_files:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 207,
             "success": True,
@@ -241,7 +251,7 @@ async def upload_datasets(request_http: Request, files: List[UploadFile] = File(
     else:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 201,
             "success": True,
@@ -263,6 +273,7 @@ async def update_dataset(
     file: UploadFile = File(...),
     token: str = Depends(verify_bearer_token)
 ):
+    timestamp = get_current_time()
     old_filename = target
     new_filename = file.filename
     original_file_path = os.path.join(DATASETS_DIR, target)
@@ -274,7 +285,7 @@ async def update_dataset(
         shutil.copyfileobj(file.file, f)
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
@@ -295,6 +306,7 @@ async def update_dataset(
 # Endpoint untuk menghapus (Delete) file
 @app.delete("/datasets/delete", tags=["datasets"])
 async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     deleted_files = []
     not_found_files = []
     for filename in request.filenames:
@@ -307,7 +319,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
     if not_found_files:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 207,
             "success": True,
@@ -324,7 +336,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
     else:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -341,6 +353,7 @@ async def delete_datasets(request_http: Request, request: DeleteDatasetsRequest,
 # Endpoint setup awal untuk raw process vectordb (load dokumen, chunking, dan embedding)
 @app.post("/setup", tags=["setup"])
 async def raw_process(request_http: Request, request: ProcessRequest, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     if not request.llm:
         raise HTTPException(status_code=400, detail="LLM harus diisi dengan sesuai.")
     if not request.model_llm:
@@ -387,7 +400,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         if not documents:
             log_activity({
                 "id": generate_id(),
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": timestamp,
                 "method": f"{request_http.method} {request_http.url.path}",
                 "status_code": 404,
                 "success": False,
@@ -415,7 +428,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saat menyimpan embeddings: {str(e)}")
     log_configllm({
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "llm": request.llm,
         "model_llm": request.model_llm,
         "embbeder": request.embbeder,
@@ -426,7 +439,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
     })
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request_http.method} {request_http.url.path}",
         "status_code": 200,
         "success": True,
@@ -437,7 +450,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
         success=True,
         message="Proses penyiapan dokumen berhasil diselesaikan dan embeddings berhasil disimpan pada vector database.",
         data={
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "llm": request.llm,
             "model_llm": request.model_llm,
             "embbeder": request.embbeder,
@@ -452,6 +465,7 @@ async def raw_process(request_http: Request, request: ProcessRequest, token: str
 # Endpoint untuk mengecek LLM dan EMBEDDER
 @app.get("/checkmodel", tags=["checkmodel"])
 async def check_model(request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     try:
         file_path = "api/logs/log_configllm.xlsx"
         if not os.path.exists(file_path):
@@ -473,7 +487,7 @@ async def check_model(request_http: Request, token: str = Depends(verify_bearer_
         }
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -494,12 +508,13 @@ async def check_model(request_http: Request, token: str = Depends(verify_bearer_
 # Endpoint untuk scrapping berita
 @app.get("/news", tags=["news"])
 async def scrapping_news(request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     news_data = scrap_news()
     news_data_json = json.loads(news_data)
     try:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -520,11 +535,12 @@ async def scrapping_news(request_http: Request, token: str = Depends(verify_bear
 # Endpoint untuk menampilkan graph
 @app.get("/graph", tags=["graph"])
 async def visualize_graph(request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     file_path = "src/graph/graph-va-pmb-undiksha.png"
     if os.path.exists(file_path):
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -538,6 +554,7 @@ async def visualize_graph(request_http: Request, token: str = Depends(verify_bea
 # Enpoint untuk chat
 @app.post("/chat", tags=["chat"])
 async def chat_conversation(request: QuestionRequest, request_http: Request, token: str = Depends(verify_bearer_token)):
+    timestamp = get_current_time()
     question = request.question
     if not request.question:
         raise HTTPException(status_code=400, detail="Pertanyaan tidak boleh kosong.")
@@ -545,7 +562,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
         _, answers = build_graph(question)
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 200,
             "success": True,
@@ -556,7 +573,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
             success=True,
             message="OK",
             data=[{
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": timestamp,
                 "question": question,
                 "answer": answers
             }]
@@ -566,7 +583,7 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
     except Exception as e:
         log_activity({
             "id": generate_id(),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": timestamp,
             "method": f"{request_http.method} {request_http.url.path}",
             "status_code": 500,
             "success": False,
@@ -583,9 +600,10 @@ async def chat_conversation(request: QuestionRequest, request_http: Request, tok
 # Custom handler untuk 404 Not Found
 @app.exception_handler(HTTP_404_NOT_FOUND)
 async def not_found_handler(request: Request, exc: StarletteHTTPException):
+    timestamp = get_current_time()
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request.method} {request.url.path}",
         "status_code": 404,
         "success": False,
@@ -602,9 +620,10 @@ async def not_found_handler(request: Request, exc: StarletteHTTPException):
 # Custom handler untuk 405 Method Not Allowed
 @app.exception_handler(HTTP_405_METHOD_NOT_ALLOWED)
 async def method_not_allowed_handler(request: Request, exc: StarletteHTTPException):
+    timestamp = get_current_time()
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request.method} {request.url.path}",
         "status_code": 405,
         "success": False,
@@ -621,9 +640,10 @@ async def method_not_allowed_handler(request: Request, exc: StarletteHTTPExcepti
 # General handler untuk HTTP Exception lain
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    timestamp = get_current_time()
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request.method} {request.url.path}",
         "status_code": exc.status_code,
         "success": False,
@@ -640,11 +660,12 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 # General handler untuk validasi error
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    timestamp = get_current_time()
     errors = exc.errors()
     error_messages = "; ".join([f"{err['loc']}: {err['msg']}" for err in errors])
     log_activity({
         "id": generate_id(),
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp": timestamp,
         "method": f"{request.method} {request.url.path}",
         "status_code": 422,
         "success": False,
@@ -659,4 +680,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # RUNNING API
-# uvicorn api.api:app --reload --port 4001 --no-date-header
+# uvicorn api.api:app --reload --port 4001
