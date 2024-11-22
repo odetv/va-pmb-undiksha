@@ -1,10 +1,10 @@
 services:
   api:
     build: .
-    command: sh -c "uvicorn api.api:app --reload --port 4001 --host=0.0.0.0"
+    command: sh -c "uvicorn api.api:app --reload --port 3001 --host=0.0.0.0"
     env_file:
       - .env
     ports:
-      - "4001:4001"
+      - "3001:3001"
     volumes:
       - .:/app
