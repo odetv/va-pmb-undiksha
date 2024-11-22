@@ -659,4 +659,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # RUNNING API
-# uvicorn api.api:app --reload --port 3001
+# uvicorn api.api:app --reload --port 4001
