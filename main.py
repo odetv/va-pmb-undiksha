@@ -226,16 +226,15 @@ def infoKelulusanAgent(state: AgentState):
     tglLahirPendaftar_match = re.search(r"(?:ttl|tanggal lahir|tgl lahir|lahir|tanggal-lahir|tgl-lahir|lhr|tahun|tahun lahir|thn lahir|thn|th lahir)[^\d]*(\d{4}-\d{2}-\d{2})", state["kelulusanQuestion"], re.IGNORECASE)
     state["noPendaftaran"] = noPendaftaran_match.group(1)
     state["tglLahirPendaftar"] = tglLahirPendaftar_match.group(1)
+    kelulusan_info = show_kelulusan_pmb(state)
 
     try:
-        kelulusan_info = show_kelulusan_pmb(state)
         no_pendaftaran = kelulusan_info.get("nomor_pendaftaran", "")
         nama_siswa = kelulusan_info.get("nama_siswa", "")
         tgl_lahir = kelulusan_info.get("tgl_lahir", "")
         tgl_daftar = kelulusan_info.get("tahun", "")
         pilihan_prodi = kelulusan_info.get("program_studi", "")
         status_kelulusan = kelulusan_info.get("status_kelulusan", "")
-
         response = f"""
             Berikut informasi Kelulusan Peserta SMBJM di Undiksha (Universitas Pendidikan Ganesha).
             - Nomor Pendaftaran: {no_pendaftaran}
@@ -246,22 +245,31 @@ def infoKelulusanAgent(state: AgentState):
             - Status Kelulusan: {status_kelulusan}
             Berdasarkan informasi, berikan ucapan selamat bergabung di menjadi bagian dari Universitas Pendidikan Ganesha jika {nama_siswa} lulus, atau berikan motivasi {nama_siswa} jika tidak lulus.
         """
-
         agentOpinion = {
             "answer": response
         }
+        state["finishedAgents"].add("infoKelulusan_agent")
+        state["responseKelulusan"] = response
+        return {"answerAgents": [agentOpinion]}
 
     except Exception as e:
-        # print("Error retrieving graduation information:", e)
-        return {
-            "answerAgents": [{
-                "answer": "Terjadi kesalahan dalam mendapatkan informasi kelulusan. Silakan coba lagi nanti."
-            }]
+        print("Error retrieving graduation information:", e)
+        prompt = f"""
+            Anda adalah seorang pengirim pesan informasi Undiksha.
+            Tugas Anda untuk memberitahu pengguna bahwa:
+            Terjadi kesalahan dalam mengecek informasi kelulusan.
+            - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna: {kelulusan_info}
+        """
+        messages = [
+            SystemMessage(content=prompt)
+        ]
+        response = chat_llm(messages)
+        agentOpinion = {
+            "answer": response
         }
-
-    state["finishedAgents"].add("infoKelulusan_agent")
-    state["responseKelulusan"] = response
-    return {"answerAgents": [agentOpinion]}
+        state["finishedAgents"].add("infoKelulusan_agent")
+        state["responseKelulusan"] = response
+        return {"answerAgents": [agentOpinion]}
 
 
 
@@ -379,7 +387,7 @@ def graderHallucinationsAgent(state: AgentState):
 
     if "responseFinal" not in state:
         state["responseFinal"] = ""
-    print("\n\n\nINI DEBUG FINAL::::", state["responseFinal"])
+    # print("\n\n\nINI DEBUG FINAL::::", state["responseFinal"])
 
     if "generalHallucinationCount" not in state:
         state["generalHallucinationCount"] = 0

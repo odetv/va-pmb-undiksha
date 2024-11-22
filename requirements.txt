@@ -28,3 +28,5 @@ beautifulsoup4
 ragas
 openpyxl
 xlsxwriter
+pypdf
+python-multipart

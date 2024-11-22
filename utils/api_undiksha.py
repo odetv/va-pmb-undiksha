@@ -38,7 +38,7 @@ def get_auth_token_ktm():
             raise Exception(f"Autentikasi gagal: {result['message']}")
     except requests.exceptions.RequestException as e:
         raise SystemExit(f"Terjadi kesalahan saat mengakses API autentikasi: {e}")
-    
+
 
 def get_auth_token_kelulusan():
     body = {
@@ -72,7 +72,10 @@ def show_ktm_mhs(state: AgentState):
         state["urlKTMMhs"] = url_ktm_mhs
         return url_ktm_mhs
     except requests.exceptions.RequestException as e:
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API KTM: {e}")
+        # if e.response is not None:
+        # print("Detail kesalahan:", e.response.text)
+        # raise SystemExit(f"Terjadi kesalahan saat mengakses API KTM: {e}")
+        return f"Detail kesalahan: {e.response.text}"
 
 
 def show_kelulusan_pmb(state: AgentState):
@@ -80,18 +83,15 @@ def show_kelulusan_pmb(state: AgentState):
     tglLahirPendaftar = state.get("tglLahirPendaftar")
     token = get_auth_token_kelulusan()
     tahun = get_current_year()
-    
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/x-www-form-urlencoded"
     }
-
     body = {
         "tahun": tahun,
         "no-pendaftaran": noPendaftaran,
         "tgl-lahir": tglLahirPendaftar
     }
-
     try:
         response = requests.post(API_KELULUSAN_UNDIKSHA_RESPONSE_URL, headers=headers, data=body)
         response.raise_for_status()
@@ -106,16 +106,15 @@ def show_kelulusan_pmb(state: AgentState):
                 "program_studi": data_siswa["program_studi"],
                 "status_kelulusan": data_siswa["status_kelulusan"]
             }
-            # print(f"Informasi Kelulusan: {informasi_kelulusan}")
             return informasi_kelulusan
         else:
-            raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
-    
+            # raise Exception(f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}")
+            return f"Data tidak ditemukan: {result.get('message', 'Tidak ada pesan kesalahan')}"
     except requests.exceptions.RequestException as e:
-        if e.response is not None:
-            print("Detail kesalahan:", e.response.text)
-        raise SystemExit(f"Terjadi kesalahan saat mengakses API kelulusan: {e}")
-        # return "Maaf sedang terjadi kesalahan pada sistem."
+        # if e.response is not None:
+        # print("Detail kesalahan:", e.response.text)
+        # raise SystemExit(f"Terjadi kesalahan saat mengakses API Kelulusan: {e}")
+        return f"Detail kesalahan: {e.response.text}"
 
 
 
