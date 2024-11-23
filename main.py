@@ -1,6 +1,4 @@
-import os
 import re
-from langchain_openai import OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_community.vectorstores import FAISS
@@ -10,7 +8,7 @@ from utils.api_undiksha import show_ktm_mhs, show_kelulusan_pmb
 from utils.create_graph_image import get_graph_image
 from utils.debug_time import time_check
 from utils.expansion import query_expansion, CONTEXT_ABBREVIATIONS
-from src.config.config import DATASETS_DIR, VECTORDB_DIR
+from src.config.config import VECTORDB_DIR
 
 
 
@@ -199,12 +197,11 @@ def incompleteInfoKelulusanAgent(state: AgentState):
     print(info)
 
     response = """
-        Dari informasi yang ada, belum terdapat Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM yang diberikan.
+        Untuk mengecek kelulusan dapat melalui link https://penerimaan.undiksha.ac.id/smbjm/login atau langsung dari pesan ini saya dapat membantu anda, namun diperlukan mengirimkan Nomor Pendaftaran dan Tanggal Lahir Pendaftar SMBJM.
         - Format penulisan pesan:
             Cek Kelulusan Nomor Pendaftaran [NO_PENDAFTARAN_10_DIGIT] Tanggal Lahir [YYYY-MM-DD]
         - Contoh penulisan pesan:
-            Cek Kelulusan Nomor Pendaftaran 3201928428 Tanggal Lahir 2005-01-30
-        Kirimkan dengan benar pada pesan ini sesuai format dan contoh, agar bisa mengecek kelulusan SMBJM Undiksha.
+            Cek Kelulusan Nomor Pendaftaran 1234567890 Tanggal Lahir 2001-01-31
     """
 
     agentOpinion = {
@@ -258,7 +255,7 @@ def infoKelulusanAgent(state: AgentState):
             Anda adalah seorang pengirim pesan informasi Undiksha.
             Tugas Anda untuk memberitahu pengguna bahwa:
             Terjadi kesalahan dalam mengecek informasi kelulusan.
-            - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna: {kelulusan_info}
+            - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna (Jika terdapat informasi yang bersifat penting atau rahasia maka ganti menjadi "Tidak disebutkan"): {kelulusan_info}
         """
         messages = [
             SystemMessage(content=prompt)
@@ -316,13 +313,12 @@ def incompleteInfoKTMAgent(state: AgentState):
     print(info)
 
     response = """
-        Dari informasi yang ada, belum terdapat nomor NIM (Nomor Induk Mahasiswa) yang diberikan.
+        Untuk melihat KTM dapat melalui SSO Undiksha atau langsung dari pesan ini saya dapat membantu anda, namun diperlukan mengirimkan NIM (Nomor Induk Mahasiswa) yang valid.
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         - Format penulisan pesan:
             KTM [NIM]
         - Contoh penulisan pesan:
-            KTM XXXXXXXXXX
-        Kirimkan NIM yang benar pada pesan ini sesuai format dan contoh, agar bisa mencetak Kartu Tanda Mahasiswa (KTM).
+            KTM 1234567890
     """
 
     agentOpinion = {
@@ -538,12 +534,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?") # DEBUG AGENT: GENERAL, KTM, KELULUSAN, OUTOFCONTEXT
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")                        # DEBUG AGENT: GENERAL, KTM, KELULUSAN
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.")                                                                                                        # DEBUG AGENT: GENERAL, KTM
-# build_graph("Siapa rektor undiksha?")                                                                                                                                         # DEBUG AGENT: GENERAL
-# build_graph("Saya ingin cetak ktm 2115101014.")                                                                                                                               # DEBUG AGENT: KTM-INFO
-# build_graph("Saya ingin cetak ktm")                                                                                                                                           # DEBUG AGENT: KTM-INCOMPLETE
-# build_graph("Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.")                                                                                # DEBUG AGENT: KELULUSAN-INFO
-# build_graph("Saya ingin cek kelulusan")                                                                                                                                       # DEBUG AGENT: KELULUSAN-INCOMPLETE
-# build_graph("Siapa bupati buleleng?")                                                                                                                                         # DEBUG AGENT: OUTOFCONTEXT
+# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?") # DEBUG AGENT: GENERAL, KTM, KELULUSAN, OUTOFCONTEXT
