@@ -344,7 +344,7 @@ def infoKTMAgent(state: AgentState):
     response = f"""
         Berikut informasi Kartu Tanda Mahasiswa (KTM) Anda.
         - NIM: {id_nim_mhs}
-        - URL KTM: {url_ktm_mhs}
+        - Download KTM: {url_ktm_mhs}
     """
 
     agentOpinion = {
@@ -444,6 +444,7 @@ def resultWriterAgent(state: AgentState):
         - Awali dengan "Salam Harmoni🙏"
         - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
         - Jangan tawarkan informasi lainnya selain konteks yang didapat saja.
+        - Hasilkan response dalam format Markdown.
         Berikut adalah informasinya:
         {state["answerAgents"]}
     """
