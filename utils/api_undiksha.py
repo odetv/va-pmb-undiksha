@@ -59,7 +59,7 @@ def get_auth_token_kelulusan():
 
 
 def show_ktm_mhs(state: AgentState):
-    id_nim_mhs = state.get("idNIMMhs")
+    id_nim_mhs = state.get("nimKTMMhs")
     token = get_auth_token_ktm()
     headers = {
         "token": token

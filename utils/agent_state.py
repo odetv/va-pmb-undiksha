@@ -1,38 +1,31 @@
 from operator import add
 from typing_extensions import TypedDict, Annotated, Sequence, Set
-from langchain.memory import ConversationBufferMemory
 
 
 class AnswerState(TypedDict):
-    agent = None
+    question = None
     answer = None
+
 
 class AgentState(TypedDict):
     context: str
     question: str
     question_type: str
-    generalContext: str
-    generalGraderDocs: str
-    generalHallucinationCount: int
-    isHallucination: str
-    responseGeneral: str
-    checkKelulusan: str
-    noPendaftaran: str
-    tglLahirPendaftar: str
-    pinPendaftaran: str
-    responseIncompleteInfoKelulusan: str
-    responseKelulusan: str
-    checkKTM: str
-    idNIMMhs: str
-    urlKTMMhs: str
-    responseIncompleteNim: str
-    responseKTM: str
-    responseOutOfContext: str
-    responseFinal: str
-    finishedAgents: Set[str]
-    answerAgents : Annotated[Sequence[AnswerState], add]
     generalQuestion: str
     kelulusanQuestion: str
     ktmQuestion: str
     outOfContextQuestion: str
-    memory: ConversationBufferMemory
+    totalAgents: int
+    finishedAgents: Set[str]
+    generalContext: str
+    generalGraderDocs: str
+    checkKelulusan: str
+    noPendaftaran: str
+    tglLahirPendaftar: str
+    checkKTM: str
+    nimKTMMhs: str
+    urlKTMMhs: str
+    answerAgents : Annotated[Sequence[AnswerState], add]
+    responseFinal: str
+    isHallucination: str
+    hallucinationCount: int

@@ -1,10 +1,23 @@
 services:
   api:
+    container_name: api-pmb-fastapi
     build: .
     command: sh -c "uvicorn api.api:app --reload --port 4001 --host=0.0.0.0"
     env_file:
       - .env
     ports:
       - "4001:4001"
+    restart: always
+    volumes:
+      - .:/app
+  streamlit:
+    container_name: web-pmb-streamlit
+    build: .
+    command: streamlit run app/Home.py --server.port 4003 --server.address 0.0.0.0
+    env_file:
+      - .env
+    ports:
+      - "4003:4003"
+    restart: always
     volumes:
       - .:/app

@@ -1,9 +1,0 @@
-Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3242000006 tanggal lahir 2005-11-30. Siapa bupati buleleng?      # DEBUG AGENT: GENERAL, KTM, KELULUSAN, OUTOFCONTEXT
-Siapa rektor undiksha? Saya ingin cetak ktm 2115101014. Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.                             # DEBUG AGENT: GENERAL, KTM, KELULUSAN
-Siapa rektor undiksha? Saya ingin cetak ktm 2115101014.                                                                                                             # DEBUG AGENT: GENERAL, KTM
-Siapa rektor undiksha?                                                                                                                                              # DEBUG AGENT: GENERAL
-Saya ingin cetak ktm 2115101014.                                                                                                                                    # DEBUG AGENT: KTM-INFO
-Saya ingin cetak ktm                                                                                                                                                # DEBUG AGENT: KTM-INCOMPLETE
-Saya ingin cek kelulusan nomor pendaftaran 3243000001 tanggal lahir 2006-02-21.                                                                                     # DEBUG AGENT: KELULUSAN-INFO
-Saya ingin cek kelulusan                                                                                                                                            # DEBUG AGENT: KELULUSAN-INCOMPLETE
-Siapa bupati buleleng?                                                                                                                                              # DEBUG AGENT: OUTOFCONTEXT

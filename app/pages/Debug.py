@@ -1,10 +1,12 @@
 import os
+import sys
 import streamlit as st
 import pandas as pd
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_core.messages import HumanMessage, SystemMessage
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.llm import chat_llm, embedder
 from dotenv import load_dotenv
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
@@ -15,8 +17,8 @@ STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
 
 
 def setup_page():
-    st.set_page_config(layout="wide", page_title="Debug - VA PMB Undiksha", page_icon="assets/images/logo.png")
-    st.sidebar.image("assets\images\logo.png", use_column_width=True)
+    st.set_page_config(layout="wide", page_title="Debug - VA PMB Undiksha", page_icon="public/images/logo.png")
+    st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
     with st.sidebar:
         "[Source Code](https://github.com/odetv/va-pmb-undiksha)"

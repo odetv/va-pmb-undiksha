@@ -17,8 +17,8 @@ INITIAL_MESSAGE = {"role": "assistant", "content": "Salam Harmoni🙏 Ada yang b
 
 
 def setup_page():
-    st.set_page_config(page_title="PMB Undiksha", layout="wide", page_icon="assets/images/logo.png")
-    st.sidebar.image("assets/images/logo.png", use_column_width=True)
+    st.set_page_config(page_title="PMB Undiksha", layout="wide", page_icon="public/images/logo.png")
+    st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Virtual Assistant PMB Undiksha")
     st.sidebar.write("Hai, selamat datang di Virtual Assistant Penerimaan Mahasiswa Baru Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
@@ -78,7 +78,7 @@ def display_chat_history():
     for msg in st.session_state.messages:
         st.chat_message(msg["role"]).write(msg["raw_content"])
         for img_url in msg.get("images", []):
-            st.image(img_url, use_column_width=False)
+            st.image(img_url)
 
 
 def handle_user_input():
@@ -90,7 +90,7 @@ def handle_user_input():
         add_message("assistant", response["msg"], response["html_msg"], response["images"])
         st.chat_message("assistant").markdown(response["msg"])
         for img_url in response["images"]:
-            st.image(img_url, use_column_width=False)
+            st.image(img_url)
 
 
 def main():
@@ -106,8 +106,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# DEBUG RUNNING
-# streamlit run app/Home.py
