@@ -12,7 +12,6 @@ def outOfContextAgent(state: AgentState):
     """
 
     agentOpinion = {
-        "question": state["outOfContextQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("outofcontext_agent")

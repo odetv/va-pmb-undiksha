@@ -17,7 +17,6 @@ def incompleteInfoKTMAgent(state: AgentState):
     """
 
     agentOpinion = {
-        "question": state["ktmQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("incompleteInfoKTM_agent")

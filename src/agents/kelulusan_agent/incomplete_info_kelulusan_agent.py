@@ -16,7 +16,6 @@ def incompleteInfoKelulusanAgent(state: AgentState):
     """
 
     agentOpinion = {
-        "question": state["kelulusanQuestion"],
         "answer": response
     }
     state["finishedAgents"].add("incompleteInfoKelulusan_agent")

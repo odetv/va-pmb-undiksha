@@ -55,7 +55,6 @@ def infoKelulusanAgent(state: AgentState):
         ]
         response = chat_llm(messages)
         agentOpinion = {
-            "question": state["kelulusanQuestion"],
             "answer": response
         }
         state["finishedAgents"].add("infoKelulusan_agent")
