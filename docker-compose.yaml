@@ -2,7 +2,7 @@ services:
   api:
     container_name: api-pmb-fastapi
     build: .
-    command: sh -c "uvicorn api.api:app --reload --port 4001 --host=0.0.0.0"
+    command: sh -c "uvicorn api.api:app --host=0.0.0.0 --port 4001 --workers 8"
     env_file:
       - .env
     ports:

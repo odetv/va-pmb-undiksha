@@ -133,7 +133,7 @@ Atau
 Jalankan dengan API (Dokumentasi: `/docs` atau `/openapipmb.json`)
 
 ```bash
-  uvicorn api.api:app --reload --port XXXX
+  uvicorn api.api:app --host 0.0.0.0 --port XXXX --workers X
 ```
 
 Atau
