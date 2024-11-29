@@ -106,8 +106,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# DEBUG RUNNING
-# streamlit run app/Home.py --server.port 4003

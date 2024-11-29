@@ -677,7 +677,3 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         message=f"{error_messages}",
         data=None
     )
-
-
-# RUNNING API
-# uvicorn api.api:app --reload --port 4001
