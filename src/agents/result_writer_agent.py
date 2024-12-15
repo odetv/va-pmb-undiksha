@@ -19,6 +19,7 @@ def resultWriterAgent(state: AgentState):
             - Awali dengan "Salam Harmoni🙏"
             - Berikan informasi secara lengkap dan jelas apa adanya sesuai informasi yang diberikan.
             - Urutan informasi sesuai dengan urutan pertanyaan.
+            - Jangan menyebut ulang pertanyaan secara eksplisit.
             - Jangan menjawab selain menggunakan informasi pada informasi yang diberikan, sampaikan dengan apa adanya jika Anda tidak mengetahui jawabannya.
             - Jangan tawarkan informasi lainnya selain informasi yang diberikan yang didapat saja.
             - Hasilkan response dalam format Markdown.
