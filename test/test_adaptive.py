@@ -3,7 +3,7 @@ import os
 import pandas as pd
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config.sample_case import questions, ground_truths
-from config.rag_adaptive import build_graph
+from config.rag_adaptive import rag_adaptive
 from datasets import Dataset 
 from ragas import evaluate
 from ragas.metrics import (
@@ -17,12 +17,10 @@ from ragas.metrics import (
 answers = []
 contexts = []
 
-
 for question in questions:
-    context, answer = build_graph(question)
+    context, answer = rag_adaptive(question)
     answers.append(answer)
     contexts.append([ctx['answer'] for ctx in context])
-
 
 data = {
     "question": questions,
@@ -30,7 +28,6 @@ data = {
     "contexts": contexts,
     "ground_truth": ground_truths
 }
-
 
 dataset = Dataset.from_dict(data)
 result = evaluate(
@@ -42,7 +39,6 @@ result = evaluate(
         answer_relevancy,
     ],
 )
-
 
 df = result.to_pandas()
 df.columns = ["question", "answer", "contexts", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
@@ -56,7 +52,6 @@ average_row['contexts'] = ''
 average_row['ground_truth'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
-
 
 with pd.ExcelWriter("test/scores_ragas/score_test_adaptive.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')

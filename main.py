@@ -18,7 +18,7 @@ from src.agents.outofcontext_agent.outofcontext_agent import outOfContextAgent
 
 
 @time_check
-def build_graph(question):
+def rag_adaptive(question):
     workflow = StateGraph(AgentState)
     initial_state = questionIdentifierAgent({"question": question, "finishedAgents": set()})
     context = initial_state["question_type"]
@@ -93,4 +93,4 @@ def build_graph(question):
 
 
 # DEBUG QUERY EXAMPLES
-# build_graph("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
+# rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")

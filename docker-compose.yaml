@@ -13,11 +13,11 @@ services:
   streamlit:
     container_name: web-pmb-streamlit
     build: .
-    command: streamlit run app/Home.py --server.port 4003 --server.address 0.0.0.0
+    command: streamlit run app/chat.py --server.port 4002 --server.address 0.0.0.0
     env_file:
       - .env
     ports:
-      - "4003:4003"
+      - "4002:4002"
     restart: always
     volumes:
       - .:/app

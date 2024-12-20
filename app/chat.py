@@ -3,7 +3,7 @@ import re
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from main import build_graph
+from main import rag_adaptive
 
 
 EXAMPLE_QUESTIONS = [
@@ -23,8 +23,8 @@ def setup_page():
     st.sidebar.write("Hai, selamat datang di Virtual Assistant Penerimaan Mahasiswa Baru Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
     <p style="color:gray;">
-        <small>Developed by: <strong>I Gede Gelgel Abdiutama</strong></small><br>
-        <small>Support by: <strong>UPA TIK Undiksha</strong></small>
+        <small>Author: <strong>I Gede Gelgel Abdiutama</strong></small><br>
+        <small>Support: <strong>UPA TIK Undiksha</strong></small>
     </p>
     """, unsafe_allow_html=True)
     st.title("Tanya Ganesha Muda🎓")
@@ -32,7 +32,7 @@ def setup_page():
 
 def process_response(prompt):
     with st.spinner("Sedang memproses, harap tunggu..."):
-        _, response = build_graph(prompt)
+        _, response = rag_adaptive(prompt)
         msg = re.sub(
             r'(https://aka\.undiksha\.ac\.id/api/ktm/generate/\S*)', 
             r'[Preview URL](\1)',
@@ -63,7 +63,7 @@ def add_message(role, content, html_content=None, images=None):
 
 
 def display_example_questions():
-    cols = st.columns(len(EXAMPLE_QUESTIONS), vertical_alignment="center")
+    cols = st.columns(len(EXAMPLE_QUESTIONS))
     for col, prompt in zip(cols, EXAMPLE_QUESTIONS):
         with col:
             if st.button(prompt):
