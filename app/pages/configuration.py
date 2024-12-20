@@ -17,7 +17,7 @@ STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
 
 
 def setup_page():
-    st.set_page_config(layout="wide", page_title="Debug - VA PMB Undiksha", page_icon="public/images/logo.png")
+    st.set_page_config(layout="wide", page_title="VA PMB Undiksha | Configuration", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
     # with st.sidebar:
