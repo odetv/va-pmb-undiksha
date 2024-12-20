@@ -13,16 +13,13 @@ from ragas.metrics import (
     context_precision
 )
 
-
 answers = []
 contexts = []
-
 
 for question in questions:
     context, answer = rag_naive(question)
     answers.append(answer)
     contexts.append([context])
-
 
 data = {
     "question": questions,
@@ -30,7 +27,6 @@ data = {
     "contexts": contexts,
     "ground_truth": ground_truths
 }
-
 
 dataset = Dataset.from_dict(data)
 result = evaluate(
@@ -42,7 +38,6 @@ result = evaluate(
         answer_relevancy,
     ],
 )
-
 
 df = result.to_pandas()
 df.columns = ["question", "answer", "contexts", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
@@ -56,7 +51,6 @@ average_row['contexts'] = ''
 average_row['ground_truth'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
-
 
 with pd.ExcelWriter("test/scores_ragas/score_test_naive.xlsx", engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')

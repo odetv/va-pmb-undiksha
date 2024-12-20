@@ -122,10 +122,10 @@ Buat dan Lengkapi file environment variabel (.env)
   VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
-Jalankan dengan Web Streamlit (Frontpage: `/Home` dan Backpage: `/debug`)
+Jalankan dengan Web Streamlit (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
-  streamlit run app/Home.py --server.port XXXX
+  streamlit run app/chat.py --server.port XXXX
 ```
 
 Atau
@@ -142,7 +142,7 @@ Jalankan dengan CLI di Terminal
 
 ```bash
   # Tambahkan baris kode ini pada baris terakhir file main.py:
-  build_graph("Ketik pertanyaan disini")
+  rag_adaptive("Ketik pertanyaan disini")
 
   # Jalankan di terminal:
   python main.py
@@ -163,8 +163,8 @@ va-pmb-undiksha                         # Root directory project
 │  ├─ .streamlit
 │  │  └─ config.toml
 │  ├─ pages
-│  │  └─ Debug.py
-│  └─ Home.py                           # Base code run web streamlit
+│  │  └─ configuration.py               # Configuration page in web streamlit
+│  └─ chat.py                           # Base code run web streamlit
 ├─ public                               # Public assets file and media
 │  ├─ etc
 │  │  └─ example_question.txt

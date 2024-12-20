@@ -20,9 +20,9 @@ def setup_page():
     st.set_page_config(layout="wide", page_title="Debug - VA PMB Undiksha", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
-    with st.sidebar:
-        "[Source Code](https://github.com/odetv/va-pmb-undiksha)"
-        "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/odetv/va-pmb-undiksha?quickstart=1)"
+    # with st.sidebar:
+    #     "[Source Code](https://github.com/odetv/va-pmb-undiksha)"
+    #     "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/odetv/va-pmb-undiksha?quickstart=1)"
 
 
 def load_documents():
@@ -292,12 +292,12 @@ def debug_key():
     
     with st.sidebar.popover("Login Admin"):
         input_placeholder = st.empty()
-        user_key = input_placeholder.text_input("Masukkan Key Admin untuk debugging!", type="password")
+        user_key = input_placeholder.text_input("Masukkan Key Admin untuk melakukan konfigurasi!", type="password")
 
     if user_key:
         if user_key == STREAMLIT_KEY_ADMIN:
             st.session_state.access_granted = True
-            input_placeholder.success("Key Admin valid. Berhasil masuk ke debugging!")
+            input_placeholder.success("Key Admin valid. Berhasil masuk ke melakukan konfigurasi!")
         else:
             st.session_state.access_granted = False
             st.warning("Key Admin tidak valid. Silakan coba lagi!")
