@@ -93,4 +93,4 @@ def rag_adaptive(question):
 
 
 # DEBUG QUERY EXAMPLES
-rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
+# rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
