@@ -11,13 +11,15 @@ def questionIdentifierAgent(state: AgentState):
     info = "\n--- QUESTION IDENTIFIER ---"
     print(info)
 
+    # Query user -> query expansion
     original_question = state['question']
     cleaned_question = re.sub(r'\n+', ' ', original_question)
     expanded_question = query_expansion(cleaned_question, CONTEXT_ABBREVIATIONS)
     state["question"] = expanded_question
 
+    # LLM query analysis
     promptTypeQuestion = """
-        Anda adalah seoarang pemecah pertanyaan pengguna.
+        Anda adalah agen pemecah pertanyaan pengguna.
         Tugas Anda sangat penting. Klasifikasikan atau parsing pertanyaan dari pengguna untuk dimasukkan ke variabel sesuai konteks.
         Tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 4 konteks diajukan:
@@ -34,10 +36,19 @@ def questionIdentifierAgent(state: AgentState):
         HumanMessage(content=expanded_question),
     ]
     responseTypeQuestion = chat_llm(messagesTypeQuestion).strip().lower()
-    
     state["question_type"] = responseTypeQuestion
     print("\nPertanyaan:", expanded_question)
 
+    # Regex routing agents
+    pattern = r'"(.*?)":\s*"(.*?)"'
+    matches = re.findall(pattern, responseTypeQuestion)
+    result_dict = {key: value for key, value in matches}
+    state["generalQuestion"] = result_dict.get("general_agent", None)
+    state["kelulusanQuestion"] = result_dict.get("kelulusan_agent", None)
+    state["ktmQuestion"] = result_dict.get("ktm_agent", None)
+    state["outOfContextQuestion"] = result_dict.get("outofcontext_agent", None)
+
+    # Menghitung total agent yang bertugas
     total_agents = 0
     if "general_agent" in state["question_type"]:
         total_agents += 3
@@ -49,15 +60,8 @@ def questionIdentifierAgent(state: AgentState):
         total_agents += 1
     state["totalAgents"] = total_agents
     print(f"DEBUG: Total agents bertugas: {state['totalAgents']}")
-    pattern = r'"(.*?)":\s*"(.*?)"'
-    matches = re.findall(pattern, responseTypeQuestion)
-    result_dict = {key: value for key, value in matches}
-
-    state["generalQuestion"] = result_dict.get("general_agent", None)
-    state["kelulusanQuestion"] = result_dict.get("kelulusan_agent", None)
-    state["ktmQuestion"] = result_dict.get("ktm_agent", None)
-    state["outOfContextQuestion"] = result_dict.get("outofcontext_agent", None)
     
+    # Debugging pertanyaan agent yang bertugas
     print(f"DEBUG: generalQuestion: {state['generalQuestion']}")
     print(f"DEBUG: kelulusanQuestion: {state['kelulusanQuestion']}")
     print(f"DEBUG: ktmQuestion: {state['ktmQuestion']}")

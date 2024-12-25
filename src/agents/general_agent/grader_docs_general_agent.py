@@ -5,12 +5,12 @@ from utils.debug_time import time_check
 
 
 @time_check
-def graderDocsAgent(state: AgentState):
+def graderDocsGeneralAgent(state: AgentState):
     info = "\n--- Grader Documents ---"
     print(info)
 
     prompt = f"""
-        Anda adalah seorang pemilih konteks handal.
+        Anda adalah agen pemilih konteks handal.
         - Ambil informasi yang hanya berkaitan dengan pertanyaan.
         - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
         - Jangan mengurangi atau melebihi konteks yang diberikan.
@@ -23,9 +23,9 @@ def graderDocsAgent(state: AgentState):
         SystemMessage(content=prompt),
         HumanMessage(content=state["generalQuestion"]),
     ]
-    responseGraderDocsAgent = chat_llm(messages)
+    responseGraderDocsGeneralAgent = chat_llm(messages)
 
-    state["generalGraderDocs"] = responseGraderDocsAgent
-    state["finishedAgents"].add("graderDocs_agent")
+    state["generalGraderDocs"] = responseGraderDocsGeneralAgent
+    state["finishedAgents"].add("graderDocsGeneral_agent")
 
     return {"generalGraderDocs": state["generalGraderDocs"]}

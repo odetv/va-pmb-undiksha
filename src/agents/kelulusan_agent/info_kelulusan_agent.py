@@ -45,7 +45,7 @@ def infoKelulusanAgent(state: AgentState):
     except Exception as e:
         # print("Error retrieving graduation information:", e)
         prompt = f"""
-            Anda adalah seorang pengirim pesan informasi Undiksha.
+            Anda adalah agen pengirim pesan informasi Undiksha.
             Tugas Anda untuk memberitahu pengguna bahwa:
             Terjadi kesalahan dalam mengecek informasi kelulusan.
             - Ini pesan kesalahan dari sistem coba untuk diulas lebih lanjut agar lebih sederhana untuk diberikan ke pengguna (Jika terdapat informasi yang bersifat penting atau rahasia maka ganti menjadi "Tidak disebutkan"): {kelulusan_info}

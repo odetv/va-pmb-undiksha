@@ -6,7 +6,7 @@ from src.agents.question_identifier_agent import questionIdentifierAgent
 from src.agents.result_writer_agent import resultWriterAgent
 from src.agents.grader_hallucination_agent import graderHallucinationAgent
 from src.agents.general_agent.general_agent import generalAgent
-from src.agents.general_agent.grader_docs_agent import graderDocsAgent
+from src.agents.general_agent.grader_docs_general_agent import graderDocsGeneralAgent
 from src.agents.general_agent.answer_general_agent import answerGeneralAgent
 from src.agents.kelulusan_agent.kelulusan_agent import kelulusanAgent, routeKelulusanAgent
 from src.agents.kelulusan_agent.incomplete_info_kelulusan_agent import incompleteInfoKelulusanAgent
@@ -27,11 +27,11 @@ def rag_adaptive(question):
 
     if "general_agent" in context:
         workflow.add_node("general_agent", generalAgent)
-        workflow.add_node("graderDocs_agent", graderDocsAgent)
+        workflow.add_node("graderDocsGeneral_agent", graderDocsGeneralAgent)
         workflow.add_node("answerGeneral_agent", answerGeneralAgent)
         workflow.add_edge("questionIdentifier_agent", "general_agent")
-        workflow.add_edge("general_agent", "graderDocs_agent")
-        workflow.add_edge("graderDocs_agent", "answerGeneral_agent")
+        workflow.add_edge("general_agent", "graderDocsGeneral_agent")
+        workflow.add_edge("graderDocsGeneral_agent", "answerGeneral_agent")
         workflow.add_edge("answerGeneral_agent", "resultWriter_agent")
 
     if "kelulusan_agent" in context:
@@ -93,4 +93,4 @@ def rag_adaptive(question):
 
 
 # DEBUG QUERY EXAMPLES
-# rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
+rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
