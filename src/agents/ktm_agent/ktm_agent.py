@@ -11,7 +11,7 @@ def ktmAgent(state: AgentState):
     print(info)
 
     prompt = """
-        Anda adalah seoarang analis informasi Kartu Tanda Mahasiswa (KTM).
+        Anda adalah agen analis informasi Kartu Tanda Mahasiswa (KTM).
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         NIM (Nomor Induk Mahasiswa) yang valid dari Undiksha berjumlah 10 digit angka.
         Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
@@ -36,8 +36,7 @@ def ktmAgent(state: AgentState):
     is_complete = response == "true"
 
     state["checkKTM"] = is_complete
-    state["finishedAgents"].add("ktm_agent") 
-    print(f"Info KTM Lengkap? {is_complete}")
+    state["finishedAgents"].add("ktm_agent")
 
     return {"checkKTM": state["checkKTM"]}
 

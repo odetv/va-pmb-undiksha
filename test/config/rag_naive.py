@@ -29,8 +29,8 @@ def rag_naive(question):
             raise
     
     # Filter Context
-    promptGraderDocsAgent = f"""
-        Anda adalah seorang pemilih konteks handal.
+    promptGraderDocsGeneralAgent = f"""
+        Anda adalah agen pemilih konteks handal.
         - Ambil informasi yang hanya berkaitan dengan pertanyaan.
         - Pastikan informasi yang diambil lengkap sesuai konteks yang diberikan.
         - Jangan mengurangi atau melebihi konteks yang diberikan.
@@ -39,7 +39,7 @@ def rag_naive(question):
         Konteks: {draftContext}
     """
     messages = [
-        SystemMessage(content=promptGraderDocsAgent),
+        SystemMessage(content=promptGraderDocsGeneralAgent),
         HumanMessage(content=question),
     ]
     context = chat_llm(messages)

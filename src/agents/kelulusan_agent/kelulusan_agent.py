@@ -11,7 +11,7 @@ def kelulusanAgent(state: AgentState):
     print(info)
 
     prompt = """
-        Anda adalah seoarang analis informasi kelulusan SMBJM.
+        Anda adalah agen analis informasi kelulusan SMBJM.
         Tugas Anda adalah mengklasifikasikan jenis pertanyaan pada konteks Undiksha (Universitas Pendidikan Ganesha).
         Sekarang tergantung pada jawaban Anda, akan mengarahkan ke agent yang tepat.
         Ada 2 konteks pertanyaan yang diajukan:
@@ -37,8 +37,7 @@ def kelulusanAgent(state: AgentState):
     is_complete = response == "true"
 
     state["checkKelulusan"] = is_complete
-    state["finishedAgents"].add("kelulusan_agent") 
-    print(f"Info Kelulusan Lengkap? {is_complete}")
+    state["finishedAgents"].add("kelulusan_agent")
 
     return {"checkKelulusan": state["checkKelulusan"]}
 
