@@ -1,9 +1,10 @@
 import sys
 import os
 import pandas as pd
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.sample_case import questions, ground_truths
-from config.rag_adaptive import rag_adaptive
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from datetime import datetime
+from configs.sample_case import questions, ground_truths
+from configs.rag_adaptive import rag_adaptive
 from datasets import Dataset 
 from ragas import evaluate
 from ragas.metrics import (
@@ -13,19 +14,18 @@ from ragas.metrics import (
     context_precision,
 )
 
-
 answers = []
 contexts = []
 
 for question in questions:
     context, answer = rag_adaptive(question)
-    answers.append(answer)
     contexts.append([ctx['answer'] for ctx in context])
+    answers.append(answer)
 
 data = {
     "question": questions,
-    "answer": answers,
     "contexts": contexts,
+    "answer": answers,
     "ground_truth": ground_truths
 }
 
@@ -41,19 +41,22 @@ result = evaluate(
 )
 
 df = result.to_pandas()
-df.columns = ["question", "answer", "contexts", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
+df.columns = ["question", "contexts", "answer", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
 df['average'] = df[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 empty_row = pd.Series([None] * len(df.columns), index=df.columns)
 df = pd.concat([df, pd.DataFrame([empty_row])], ignore_index=True)
 average_row = df[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean().to_frame().T
 average_row['question'] = 'Average'
-average_row['answer'] = ''
 average_row['contexts'] = ''
+average_row['answer'] = ''
 average_row['ground_truth'] = ''
 average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
 df = pd.concat([df, average_row], ignore_index=True)
 
-with pd.ExcelWriter("test/scores_ragas/score_test_adaptive.xlsx", engine='xlsxwriter') as writer:
+timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+file_name = f"test/adaptive/results/score_ragas_adaptive_{timestamp}.xlsx"
+
+with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
     workbook  = writer.book
     worksheet = writer.sheets['Evaluation']
