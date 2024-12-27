@@ -88,19 +88,13 @@ Masuk ke direktori project
   cd va-pmb-undiksha
 ```
 
-Buat virtual environment
+Buat virtual environment (Opsional, jika menggunakan docker ini tidak perlu)
 
 ```bash
   pip install virtualenv
   python -m venv venv
   venv/Scripts/activate     # windows
   source venv/bin/activate  # macOS atau linux
-```
-
-Install requirements
-
-```bash
-  pip install -r requirements.txt
 ```
 
 Buat dan Lengkapi file environment variabel (.env)
@@ -122,25 +116,27 @@ Buat dan Lengkapi file environment variabel (.env)
   VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
-Jalankan dengan Web Streamlit (Frontpage: `/chat` dan Backpage: `/configuration`)
+## Jalankan di Development
+
+- Run API Service (Dokumentasi: `/docs` atau `/openapipmb.json`)
 
 ```bash
-  streamlit run app/chat.py --server.port XXXX
+  pip install -r requirements.txt
+  uvicorn api.api:app
 ```
 
-Atau
-
-Jalankan dengan API (Dokumentasi: `/docs` atau `/openapipmb.json`)
+- Run Web Streamlit (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
-  uvicorn api.api:app --host 0.0.0.0 --port XXXX --workers X
+  pip install -r requirements.txt
+  streamlit run app/chat.py
 ```
 
-Atau
-
-Jalankan dengan CLI di Terminal
+- Run dengan CLI di Terminal
 
 ```bash
+  pip install -r requirements.txt
+
   # Tambahkan baris kode ini pada baris terakhir file main.py:
   rag_adaptive("Ketik pertanyaan disini")
 
@@ -149,6 +145,24 @@ Jalankan dengan CLI di Terminal
 ```
 
 Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/example_question.txt)
+
+## Jalankan di Production
+
+- Deploy dengan Docker (Dokumentasi: `/docs` atau `/openapipmb.json`)
+
+```bash
+  docker compose build
+  docker compose up -d
+```
+
+Atau
+
+- Deploy Manual (Frontpage: `/chat` dan Backpage: `/configuration`)
+
+```bash
+  pip install -r requirements.txt
+  streamlit run app/chat.py --server.port XXXX
+```
 
 ## Struktur Project
 
