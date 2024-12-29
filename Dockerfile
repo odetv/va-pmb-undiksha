@@ -9,15 +9,8 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-RUN python -c "import streamlit"
-
 COPY . .
 
+RUN pip install -r requirements.txt
 
-# RUN DOCKER
-# docker-compose build
-# docker-compose up -d
+RUN python -c "import streamlit"
