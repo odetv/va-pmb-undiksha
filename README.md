@@ -116,14 +116,7 @@ Buat dan Lengkapi file environment variabel (.env)
   VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
-## Jalankan di Development
-
-- Run API Service (Dokumentasi: `/docs` atau `/openapipmb.json`)
-
-```bash
-  pip install -r requirements.txt
-  uvicorn api.api:app
-```
+## Jalankan Development
 
 - Run Web Streamlit (Frontpage: `/chat` dan Backpage: `/configuration`)
 
@@ -146,9 +139,9 @@ Buat dan Lengkapi file environment variabel (.env)
 
 Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/example_question.txt)
 
-## Jalankan di Production
+## Jalankan Production
 
-- Deploy dengan Docker (Dokumentasi: `/docs` atau `/openapipmb.json`)
+- Deploy dengan Docker (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
   docker compose build
@@ -168,11 +161,6 @@ Atau
 
 ```
 va-pmb-undiksha                         # Root directory project
-├─ api                                  # API model service
-│  ├─ logs
-│  │  ├─ logs_activity.xlsx
-│  │  └─ logs_configllm.xlsx
-│  └─ api.py                            # Base code run API service
 ├─ app                                  # Web interface streamlit
 │  ├─ .streamlit
 │  │  └─ config.toml
@@ -180,11 +168,13 @@ va-pmb-undiksha                         # Root directory project
 │  │  └─ configuration.py               # Configuration page in web streamlit
 │  └─ chat.py                           # Base code run web streamlit
 ├─ public                               # Public assets file and media
+│  ├─ backups
+│  │  └─ another_file_backups
 │  ├─ etc
 │  │  └─ example_question.txt
 │  └─ images
 │     └─ any-images.jpg
-├─ src                                  # Source base directory
+├─ src                                  # Source base directory model
 │  ├─ agents
 │  │  ├─ general_agent
 │  │  │  └─ any-agent.py
@@ -207,19 +197,15 @@ va-pmb-undiksha                         # Root directory project
 │     ├─ index.faiss
 │     └─ index.pkl
 ├─ test                                 # Unit test evaluation RAGAS
-│  ├─ config
-│  │  ├─ list_qa.xlsx
-│  │  ├─ rag_adaptive.py
-│  │  ├─ rag_naive.py
-│  │  └─ sample_case.py
-│  ├─ scores_ragas
-│  │  ├─ final
-│  │  │  ├─ score_test_adaptive.xlsx
-│  │  │  └─ score_test_naive.xlsx
-│  │  ├─ score_test_adaptive.xlsx
-│  │  └─ score_test_naive.xlsx
-│  ├─ test_adaptive.py
-│  └─ test_naive.py
+│  ├─ calc
+│  │  ├─ calc_ragas_pmb.xlsx
+│  │  ├─ calc_ragas_pmb.pdf
+│  ├─ data
+│  │  ├─ qa.xlsx
+│  │  ├─ test_case.py
+│  ├─ result
+│  │  ├─ score_ragas_adaptive.xlsx
+│  └─ ragas_test.py
 ├─ utils                                # Tools reusable
 │  ├─ agent_state.py
 │  ├─ api_undiksha.py
@@ -227,14 +213,12 @@ va-pmb-undiksha                         # Root directory project
 │  ├─ debug_time.py
 │  ├─ expansion.py
 │  ├─ llm.py
-│  ├─ logging.py
 │  ├─ raw_process.py
 │  ├─ scrapper_datasets.py
-│  └─ scrapper_rss.py
 ├─ .dockerignore
 ├─ .env.example                         # Environment example for use
 ├─ .gitignore
-├─ docker-compose.yaml
+├─ docker-compose.yaml                  # Docker compose for deploy
 ├─ Dockerfile
 ├─ main.py                              # Parrent code virtual assistant
 ├─ README.md
