@@ -3,8 +3,8 @@ import os
 import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from datetime import datetime
-from configs.sample_case import questions, ground_truths
-from configs.rag_adaptive import rag_adaptive
+from data.test_case import questions, ground_truths
+from main import rag_adaptive
 from datasets import Dataset 
 from ragas import evaluate
 from ragas.metrics import (
@@ -54,7 +54,7 @@ average_row['average'] = average_row[['context_precision', 'context_recall', 'fa
 df = pd.concat([df, average_row], ignore_index=True)
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-file_name = f"test/adaptive/results/score_ragas_adaptive_{timestamp}.xlsx"
+file_name = f"test/adaptive/result/score_ragas_adaptive_{timestamp}.xlsx"
 
 with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
