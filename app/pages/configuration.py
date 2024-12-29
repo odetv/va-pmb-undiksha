@@ -5,9 +5,8 @@ import pandas as pd
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_core.messages import HumanMessage, SystemMessage
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.llm import chat_llm, embedder
+from utils.llm import embedder
 from dotenv import load_dotenv
 from src.config.config import DATASETS_DIR, VECTORDB_DIR
 
@@ -20,9 +19,6 @@ def setup_page():
     st.set_page_config(layout="wide", page_title="VA PMB Undiksha | Configuration", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
-    # with st.sidebar:
-    #     "[Source Code](https://github.com/odetv/va-pmb-undiksha)"
-    #     "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new/odetv/va-pmb-undiksha?quickstart=1)"
 
 
 def load_documents():
@@ -59,8 +55,8 @@ def chunk_documents(documents):
         progress = st.progress(0)
 
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=900,
-            chunk_overlap=100,
+            chunk_size=1000,
+            chunk_overlap=200,
             separators=[" ", ",", ".", "\n", "\n\n", "\n\n\n", "\f"]
         )
         chunks = text_splitter.split_documents(documents)
@@ -120,11 +116,11 @@ def embeddings_documents(chunks):
     return [data["Embedding"] for data in embeddings_data]
 
 
-def entryDatasets():
-    st.write("### • Simulasi Entry Datasets")
-    st.caption("Siapkan datasets yang akan digunakan!")
+def manajementDatasets():
+    st.write("### • Manajemen Dataset")
+    st.caption("Siapkan file dataset yang digunakan.")
 
-    with st.expander("Upload Datasets", expanded=False):
+    with st.expander("Upload Dataset", expanded=False):
         if not os.path.exists(DATASETS_DIR):
             os.makedirs(DATASETS_DIR)
         if 'files' not in st.session_state:
@@ -151,7 +147,7 @@ def entryDatasets():
         if st.session_state.upload_status:
             st.success(st.session_state.upload_status)
 
-    with st.expander("Daftar Datasets", expanded=False):
+    with st.expander("Kumpulan Dataset", expanded=False):
         current_files = os.listdir(DATASETS_DIR)
         if current_files:
 
@@ -183,14 +179,12 @@ def entryDatasets():
                     st.rerun()
 
 
-
-
-def raw_process():
-    st.write("### • Simulasi Proses Data RAW")
+def buildVectorDB():
+    st.write("### • Build Vector Database")
     
     documents = None
     chunks = None
-    st.caption("Tekan tombol dibawah untuk mulai simulasi proses!")
+    st.caption('Tekan tombol "Mulai Proses" untuk mulai membuat vector database.')
     start_raw_process = st.button("Mulai Proses")
     
     with st.expander("Proses Menyiapkan Dokumen", expanded=start_raw_process):
@@ -205,85 +199,11 @@ def raw_process():
         else:
             st.warning("Menunggu proses penyiapan dokumen...", icon="⏳")
 
-    with st.expander("Proses Embeddings", expanded=(chunks is not None)):
+    with st.expander("Proses Embedding", expanded=(chunks is not None)):
         if chunks is not None or "embeddings" in st.session_state:
             vectordb = embeddings_documents(chunks)
         else:
             st.warning("Menunggu proses chunking...", icon="⏳")
-
-
-def query_user_process():
-    st.write("### • Simulasi Proses Query Pengguna")
-
-    user_question = st.chat_input("Ketik pertanyaan Anda di sini...")
-    if not user_question:
-        st.caption("Ketikkan pertanyaan untuk mencoba simulasi proses!")
-
-    # Proses embeddings pertanyaan
-    with st.expander("Proses Embeddings Pertanyaan", expanded=bool(user_question)):
-        if user_question:
-            st.write(f"Pertanyaan pengguna: {user_question}")
-            progress = st.progress(0)
-            _, EMBEDDER = embedder()
-            user_embedding = EMBEDDER.embed_query(user_question)
-            progress.progress(100)
-            st.write("Embeddings pertanyaan berhasil.")
-            df_embedding = pd.DataFrame([{"Pertanyaan": user_question, "Embedding": user_embedding}])
-            st.dataframe(df_embedding, use_container_width=True)
-        else:
-            st.warning("Menunggu pertanyaan dari pengguna...", icon="⏳")
-
-    # Proses similarity search menggunakan FAISS
-    with st.expander("Proses Similarity Search", expanded=bool(user_question)):
-        if user_question:
-            st.write("Sedang memproses similarity search...")
-            progress = st.progress(0)
-            vectordb = FAISS.load_local(VECTORDB_DIR, EMBEDDER, allow_dangerous_deserialization=True)
-            retriever = vectordb.similarity_search_with_relevance_scores(user_question, k=5)
-            progress.progress(100)
-            if retriever and len(retriever) > 0:
-                candidate_data = [{"No": i + 1, "Isi Chunk (Top 5)": doc.page_content, "Similarity Score": score} for i, (doc, score) in enumerate(retriever)]
-                df_candidates = pd.DataFrame(candidate_data)
-                st.table(df_candidates)
-            else:
-                st.write("Tidak ada hasil yang ditemukan.")
-        else:
-            st.warning("Menunggu pertanyaan dari pengguna...", icon="⏳")
-
-    # Proses embeddings kandidat
-    with st.expander("Proses Embeddings Kandidat", expanded=bool(user_question)):
-        if user_question:
-            if retriever and len(retriever) > 0:
-                st.write("Sedang memproses embeddings kandidat chunk...")
-                progress = st.progress(0)
-                candidate_embeddings = [EMBEDDER.embed_query(doc.page_content) for doc, _ in retriever]
-                progress.progress(100)
-                candidate_embedding_data = [{"No": i + 1, "Isi Chunk (Top 5)": doc.page_content, "Embedding": emb} for i, (doc, emb) in enumerate(zip([doc for doc, _ in retriever], candidate_embeddings))]
-                df_candidate_embeddings = pd.DataFrame(candidate_embedding_data)
-                st.dataframe(df_candidate_embeddings, use_container_width=True)
-            else:
-                st.write("Tidak ada kandidat chunk untuk di-embedding.")
-        else:
-            st.warning("Menunggu pertanyaan dari pengguna...", icon="⏳")
-
-    # Menyiapkan hasil jawaban akhir
-    with st.expander("Proses Menyiapkan Hasil", expanded=bool(user_question)):
-        if user_question:
-            if retriever and len(retriever) > 0:
-                prompt = f"""
-                    Pertanyaan: {user_question}
-                    Konteks: {retriever}
-                """
-                messages = [
-                    HumanMessage(prompt)
-                ]
-                response = chat_llm(messages)
-                st.write(f"Pertanyaan: \n{user_question}")
-                st.write(f"Jawaban: \n{response}")
-            else:
-                st.write("Tidak ada hasil yang ditemukan.")
-        else:
-            st.warning("Menunggu pertanyaan dari pengguna...", icon="⏳")
 
 
 def debug_key():
@@ -303,11 +223,9 @@ def debug_key():
             st.warning("Key Admin tidak valid. Silakan coba lagi!")
 
     if st.session_state.access_granted:
-        entryDatasets()
+        manajementDatasets()
         st.markdown("***")
-        raw_process()
-        st.markdown("***")
-        query_user_process()
+        buildVectorDB()
 
 
 def main():
