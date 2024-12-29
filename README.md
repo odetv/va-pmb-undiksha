@@ -205,7 +205,7 @@ va-pmb-undiksha                         # Root directory project
 │  │  ├─ test_case.py
 │  ├─ result
 │  │  ├─ score_ragas_adaptive.xlsx
-│  └─ ragas.py
+│  └─ ragas_test.py
 ├─ utils                                # Tools reusable
 │  ├─ agent_state.py
 │  ├─ api_undiksha.py
