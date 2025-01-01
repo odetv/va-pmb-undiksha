@@ -7,12 +7,6 @@ from firebase_admin import credentials, firestore
 from datetime import datetime, timezone, timedelta
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from dotenv import load_dotenv
-
-
-# Gunakan environment variable
-load_dotenv()
-TOKEN_BOT_TELEGRAM = os.getenv("TOKEN_BOT_TELEGRAM")
 
 
 # Inisialisasi Firebase Admin SDK
@@ -38,7 +32,7 @@ wita_timezone = timezone(timedelta(hours=8))
 
 
 # Daftar admin ID
-ADMIN_IDS = [896652332]
+ADMIN_IDS = [int(x) for x in os.getenv("ID_TELEGRAM_USER_ADMIN").split(",")] if os.getenv("ID_TELEGRAM_USER_ADMIN") else []
 
 
 # Command handler untuk start
@@ -71,12 +65,12 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/auth_off - Matikan fitur auth token\n"
         "/check_auth - Cek status fitur auth token\n"
         "/list_users - Lihat pengguna yang terdaftar\n"
-        "/set_role [id_user] [role] - Ubah role akses pengguna (admin, member, atau registered)\n"
+        "/set_user_role [id_user] [role] - Ubah role akses pengguna (admin, member, atau registered)\n"
         "/create_token - Buat token baru\n"
         "/list_tokens - Lihat daftar token yang ada\n"
-        "/set_status [token] [1/0] - Ubah status token (1 untuk valid, 0 untuk invalid)\n"
-        "/revoke [token] - Hapus token tertentu\n"
-        "/revoke_all - Hapus semua token\n"
+        "/set_token_status [token] [1/0] - Ubah status token (1 untuk valid, 0 untuk invalid)\n"
+        "/revoke_token [token] - Hapus token tertentu\n"
+        "/revoke_token_all - Hapus semua token\n"
     )
     await update.message.reply_text(start_message)
 
@@ -124,13 +118,13 @@ async def check_user_role(update: Update, required_role: str):
 
 
 # Command handler untuk mengubah peran pengguna
-async def set_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_user_role(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_user_role(update, 'admin'):
         return
     if len(context.args) < 2:
         await update.message.reply_text(
-            "Format perintah salah!\n\nGunakan /set_role [id_user] [role]\n"
-            "Contoh: /set_role 123456789 member\n\n"
+            "Format perintah salah!\n\nGunakan /set_user_role [id_user] [role]\n"
+            "Contoh: /set_user_role 123456789 member\n\n"
             "Keterangan:\n"
             "   - id_user = ID pengguna\n"
             "   - role = admin, member, atau registered\n"
@@ -254,11 +248,11 @@ async def list_tokens(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # Command handler untuk set status
-async def set_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def set_token_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_user_role(update, 'member'):
         return
     if len(context.args) < 2:
-        await update.message.reply_text("Format perintah salah!\n\nGunakan /set_status [token] [1/0]\nContoh: /set_status hU90f4 1\n\nKeterangan:\n   - token = Pilihan token\n   - 1 = Valid\n   - 0 = Invalid")
+        await update.message.reply_text("Format perintah salah!\n\nGunakan /set_token_status [token] [1/0]\nContoh: /set_token_status hU90f4 1\n\nKeterangan:\n   - token = Pilihan token\n   - 1 = Valid\n   - 0 = Invalid")
         return
     token, status = context.args[0], context.args[1]
     if status not in ['0', '1']:
@@ -297,7 +291,7 @@ async def revoke_token(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # Command handler untuk revoke semua token
-async def revoke_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def revoke_token_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_user_role(update, 'member'):
         return
     tokens_ref = db.collection("tokens")
@@ -319,19 +313,19 @@ async def handle_unknown_command(update: Update, context: ContextTypes.DEFAULT_T
 
 # Menghubungkan handler untuk setiap command
 async def main():
-    application = ApplicationBuilder().token(TOKEN_BOT_TELEGRAM).build()
+    application = ApplicationBuilder().token(os.getenv("TOKEN_BOT_TELEGRAM")).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("auth_on", auth_on))
     application.add_handler(CommandHandler("auth_off", auth_off))
     application.add_handler(CommandHandler("check_auth", check_auth))
     application.add_handler(CommandHandler("list_users", list_users))
-    application.add_handler(CommandHandler("set_role", set_role))
+    application.add_handler(CommandHandler("set_user_role", set_user_role))
     application.add_handler(CommandHandler("create_token", create_token))
     application.add_handler(CommandHandler("list_tokens", list_tokens))
-    application.add_handler(CommandHandler("set_status", set_status))
-    application.add_handler(CommandHandler("revoke", revoke_token))
-    application.add_handler(CommandHandler("revoke_all", revoke_all))
+    application.add_handler(CommandHandler("set_token_status", set_token_status))
+    application.add_handler(CommandHandler("revoke_token", revoke_token))
+    application.add_handler(CommandHandler("revoke_token_all", revoke_token_all))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_unknown_command))
     application.add_handler(MessageHandler(filters.COMMAND, handle_unknown_command))
     await application.run_polling()
