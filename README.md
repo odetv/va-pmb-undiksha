@@ -74,45 +74,50 @@ Prompt: Pertanyaan: {question} dan Konteks: {context}"
 LLM memproses prompt tersebut untuk menghasilkan respons lengkap.
 Respons Akhir: "Syarat-syarat pendaftaran mahasiswa baru di Undiksha adalah sebagai berikut: Untuk mendaftar sebagai mahasiswa baru di Undiksha, calon mahasiswa harus memiliki ijazah SMA atau sederajat, melengkapi formulir pendaftaran, dan mengikuti ujian masuk."
 
+## Web Interface
+
+![image](public/images/web-frontpage.png)
+![image](public/images/web-backpage.png)
+
 ## Instalasi Project
 
 Clone project
 
 ```bash
-  https://github.com/odetv/va-pmb-undiksha.git
+https://github.com/odetv/va-pmb-undiksha.git
 ```
 
 Masuk ke direktori project
 
 ```bash
-  cd va-pmb-undiksha
+cd va-pmb-undiksha
 ```
 
 Buat virtual environment (Opsional, jika menggunakan docker ini tidak perlu)
 
 ```bash
-  pip install virtualenv
-  python -m venv venv
-  venv/Scripts/activate     # windows
-  source venv/bin/activate  # macOS atau linux
+pip install virtualenv
+python -m venv venv
+venv/Scripts/activate     # windows
+source venv/bin/activate  # macOS atau linux
 ```
 
 Buat dan Lengkapi file environment variabel (.env)
 
 ```bash
-  OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-  OLLAMA_BASE_URL="YOUR_OLLAMA_BASE_URL"
-  API_KTM_UNDIKSHA_AUTH_URL="AUTH_URL_API_KTM_UNDIKSHA"
-  API_KTM_UNDIKSHA_USERNAME="USERNAME_API_KTM_UNDIKSHA"
-  API_KTM_UNDIKSHA_PASSWORD="PASSWORD_API_KTM_UNDIKSHA"
-  API_KTM_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KTM_UNDIKSHA"
-  API_KELULUSAN_UNDIKSHA_AUTH_URL="AUTH_URL_API_KELULUSAN_UNDIKSHA"
-  API_KELULUSAN_UNDIKSHA_USERNAME="USERNAME_API_KELULUSAN_UNDIKSHA"
-  API_KELULUSAN_UNDIKSHA_PASSWORD="PASSWORD_API_KELULUSAN_UNDIKSHA"
-  API_KELULUSAN_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KELULUSAN_UNDIKSHA"
-  STREAMLIT_KEY_ADMIN="ADMIN_KEY_TO_ACCESS_DEBUG_STREAMLIT"
-  VA_LLM_SERVICE="OPENAI_OR_OLLAMA"
-  VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+OLLAMA_BASE_URL="YOUR_OLLAMA_BASE_URL"
+API_KTM_UNDIKSHA_AUTH_URL="AUTH_URL_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_USERNAME="USERNAME_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_PASSWORD="PASSWORD_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KTM_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_AUTH_URL="AUTH_URL_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_USERNAME="USERNAME_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_PASSWORD="PASSWORD_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KELULUSAN_UNDIKSHA"
+STREAMLIT_KEY_ADMIN="ADMIN_KEY_TO_ACCESS_DEBUG_STREAMLIT"
+VA_LLM_SERVICE="OPENAI_OR_OLLAMA"
+VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
 ```
 
 ## Jalankan Development
@@ -120,20 +125,20 @@ Buat dan Lengkapi file environment variabel (.env)
 - Run Web Streamlit (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
-  pip install -r requirements.txt
-  streamlit run app/chat.py
+pip install -r requirements.txt
+streamlit run app/chat.py
 ```
 
 - Run dengan CLI di Terminal
 
 ```bash
-  pip install -r requirements.txt
+pip install -r requirements.txt
 
-  # Tambahkan baris kode ini pada baris terakhir file main.py:
-  rag_adaptive("Ketik pertanyaan disini")
+# Tambahkan baris kode ini pada baris terakhir file main.py:
+rag_adaptive("Ketik pertanyaan disini")
 
-  # Jalankan di terminal:
-  python main.py
+# Jalankan di terminal:
+python main.py
 ```
 
 Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/example_question.txt)
@@ -143,8 +148,8 @@ Contoh pertanyaan dapat dilihat disini: [example_question.txt](public/etc/exampl
 - Deploy dengan Docker (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
-  docker compose build
-  docker compose up -d
+docker compose build
+docker compose up -d
 ```
 
 Atau
@@ -152,8 +157,59 @@ Atau
 - Deploy Manual (Frontpage: `/chat` dan Backpage: `/configuration`)
 
 ```bash
-  pip install -r requirements.txt
-  streamlit run app/chat.py --server.port XXXX
+pip install -r requirements.txt
+streamlit run app/chat.py --server.port XXXX
+```
+
+## Tambahan Jika Menggunakan Fitur Bot dan Authentication Token
+
+Konfigurasi Firebase
+
+```bash
+Mendaftar dan Konfigurasi Console Firebase (https://console.firebase.google.com)
+
+Console Firebase -> Build Firestore Firebase -> Project aktif -> Project settings -> Service accounts -> Firebase Admin SDK -> Python -> Generate new private key
+```
+
+Konfigurasi Bot Telegram
+
+```bash
+Mendaftar Bot Father (https://telegram.me/BotFather)
+Bot Father -> Create a new bot -> Save token and url bot
+
+Konfigurasi Bot Father (https://telegram.me/BotFather)
+Bot Father -> Edit your bot -> Select bot -> Edit bot name, about, botpic, commands, etc
+```
+
+Tambahan beberapa variabel pada file environment (.env)
+
+```bash
+OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+OLLAMA_BASE_URL="YOUR_OLLAMA_BASE_URL"
+API_KTM_UNDIKSHA_AUTH_URL="AUTH_URL_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_USERNAME="USERNAME_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_PASSWORD="PASSWORD_API_KTM_UNDIKSHA"
+API_KTM_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KTM_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_AUTH_URL="AUTH_URL_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_USERNAME="USERNAME_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_PASSWORD="PASSWORD_API_KELULUSAN_UNDIKSHA"
+API_KELULUSAN_UNDIKSHA_RESPONSE_URL="RESPONSE_URL_API_KELULUSAN_UNDIKSHA"
+STREAMLIT_KEY_ADMIN="ADMIN_KEY_TO_ACCESS_DEBUG_STREAMLIT"
+VA_LLM_SERVICE="OPENAI_OR_OLLAMA"
+VA_EMBEDDER_SERVICE="OPENAI_OR_OLLAMA"
+TOKEN_BOT_TELEGRAM="YOUR_TOKEN_BOT_TELEGRAM"
+ID_TELEGRAM_USER_ADMIN="YOUR_ID_TELEGRAM_USER_ADMIN"
+FIREBASE_TYPE="YOUR_FIREBASE_TYPE"
+FIREBASE_PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
+FIREBASE_PRIVATE_KEY_ID="YOUR_FIREBASE_PRIVATE_KEY_ID"
+FIREBASE_PRIVATE_KEY="YOUR_FIREBASE_PRIVATE_KEY"
+FIREBASE_CLIENT_EMAIL="YOUR_FIREBASE_CLIENT_EMAIL"
+FIREBASE_CLIENT_ID="YOUR_FIREBASE_CLIENT_ID"
+FIREBASE_AUTH_URI="YOUR_FIREBASE_AUTH_URI"
+FIREBASE_TOKEN_URI="YOUR_FIREBASE_TOKEN_URI"
+FIREBASE_AUTH_PROVIDER_CERT_URL="YOUR_FIREBASE_AUTH_PROVIDER_CERT_URL"
+FIREBASE_CLIENT_CERT_URL="YOUR_FIREBASE_CLIENT_CERT_URL"
+FIREBASE_UNIVERSE_DOMAIN="YOUR_FIREBASE_UNIVERSE_DOMAIN"
 ```
 
 ## Struktur Project
@@ -166,6 +222,8 @@ va-pmb-undiksha                         # Root directory project
 │  ├─ pages
 │  │  └─ configuration.py               # Configuration page in web streamlit
 │  └─ chat.py                           # Base code run web streamlit
+├─ bot                                  # Web interface streamlit
+│  └─ bot.py                            # Base code run bot telegram auth token
 ├─ public                               # Public assets file and media
 │  ├─ backups
 │  │  └─ another_file_backups
@@ -220,7 +278,7 @@ va-pmb-undiksha                         # Root directory project
 ├─ docker-compose.yaml                  # Docker compose for deploy
 ├─ Dockerfile
 ├─ main.py                              # Parrent code virtual assistant
-├─ README.md
+├─ README.md                            # Documentation project
 └─ requirements.txt                     # Packages dependencies project
 ```
 
