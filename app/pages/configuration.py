@@ -18,7 +18,8 @@ STREAMLIT_KEY_ADMIN = os.getenv("STREAMLIT_KEY_ADMIN")
 def setup_page():
     st.set_page_config(layout="wide", page_title="VA PMB Undiksha | Configuration", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
-    st.sidebar.title("Panel Simulasi Proses Data Virtual Assistant PMB Undiksha")
+    st.sidebar.title("Panel Konfigurasi Virtual Assistant PMB Undiksha")
+    st.title("Konfigurasi Ganesha Muda🎓")
 
 
 def load_documents():
@@ -209,19 +210,20 @@ def buildVectorDB():
 def debug_key():
     if "access_granted" not in st.session_state:
         st.session_state.access_granted = False
-    
-    with st.sidebar.popover("Login Admin"):
+
+    if not st.session_state.access_granted:
         input_placeholder = st.empty()
-        user_key = input_placeholder.text_input("Masukkan Key Admin untuk melakukan konfigurasi!", type="password")
-
-    if user_key:
-        if user_key == STREAMLIT_KEY_ADMIN:
-            st.session_state.access_granted = True
-            input_placeholder.success("Key Admin valid. Berhasil masuk ke melakukan konfigurasi!")
-        else:
-            st.session_state.access_granted = False
-            st.warning("Key Admin tidak valid. Silakan coba lagi!")
-
+        with input_placeholder.container():
+            user_key = st.text_input("Masukkan key admin untuk melakukan konfigurasi!", type="password")
+            if st.button("Submit"):
+                if user_key == os.getenv("STREAMLIT_KEY_ADMIN"):
+                    st.session_state.access_granted = True
+                    st.success("Key admin valid. Berhasil masuk ke menu konfigurasi!")
+                    input_placeholder.empty()
+                else:
+                    st.session_state.access_granted = False
+                    st.warning("Key admin tidak valid. Silakan coba lagi!")
+    
     if st.session_state.access_granted:
         manajementDatasets()
         st.markdown("***")

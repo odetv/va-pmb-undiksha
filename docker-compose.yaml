@@ -2,7 +2,7 @@ services:
   streamlit:
     container_name: web-pmb-streamlit
     build: .
-    command: streamlit run app/chat.py --server.port 4001 --server.address 0.0.0.0
+    command: sh -c "streamlit run app/chat.py --server.port 4001 --server.address 0.0.0.0 & python bot/bot.py"
     env_file:
       - .env
     ports:

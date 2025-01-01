@@ -24,3 +24,7 @@ openpyxl
 xlsxwriter
 pypdf
 python-multipart
+
+firebase-admin
+python-telegram-bot
+nest_asyncio
