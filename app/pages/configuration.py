@@ -19,7 +19,15 @@ def setup_page():
     st.set_page_config(layout="wide", page_title="VA PMB Undiksha | Configuration", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
     st.sidebar.title("Panel Konfigurasi Virtual Assistant PMB Undiksha")
-    st.title("Konfigurasi Ganesha Muda🎓")
+    st.sidebar.write("Lakukan konfigurasi datasets dan vector database pada Virtual Assistant untuk mendapatkan hasil yang maksimal.")
+    st.sidebar.markdown("""
+    <p style="color:gray">
+        <small>Profil: <a href="https://www.linkedin.com/in/gedegelgel/"><strong>I Gede Gelgel Abdiutama</strong></a></small><br>
+        <small>Kontak: <a href="https://wa.me/6285739683673"><strong>WhatsApp</strong></a></small><br>
+        <small>Dukungan: <a href="https://upttik.undiksha.ac.id"><strong>UPA TIK Undiksha</strong></a></small>
+    </p>
+    """, unsafe_allow_html=True)
+    st.title("⚙️Konfigurasi Virtual Assistant")
 
 
 def load_documents():
@@ -214,7 +222,7 @@ def debug_key():
     if not st.session_state.access_granted:
         input_placeholder = st.empty()
         with input_placeholder.container():
-            user_key = st.text_input("Masukkan key admin untuk melakukan konfigurasi!", type="password")
+            user_key = st.text_input("Masukkan key oleh admin untuk melakukan konfigurasi!", type="password")
             if st.button("Submit"):
                 if user_key == os.getenv("STREAMLIT_KEY_ADMIN"):
                     st.session_state.access_granted = True
@@ -222,7 +230,7 @@ def debug_key():
                     input_placeholder.empty()
                 else:
                     st.session_state.access_granted = False
-                    st.warning("Key admin tidak valid. Silakan coba lagi!")
+                    st.error("Key admin tidak valid. Silakan coba lagi!")
     
     if st.session_state.access_granted:
         manajementDatasets()
