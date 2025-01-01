@@ -61,15 +61,16 @@ INITIAL_MESSAGE = {"role": "assistant", "content": "Salam Harmoni🙏 Ada yang b
 def setup_page():
     # st.set_page_config(page_title="VA PMB Undiksha", layout="wide", page_icon="public/images/logo.png")
     st.sidebar.image("public/images/logo.png")
-    st.sidebar.title("Virtual Assistant PMB Undiksha")
+    st.sidebar.title("Tanya Virtual Assistant PMB Undiksha")
     st.sidebar.write("Hai Ganesha Muda, selamat datang di Virtual Assistant Penerimaan Mahasiswa Baru Undiksha! Aku siap membantumu.")
     st.sidebar.markdown("""
-    <p style="color:gray;">
-        <small>Author: <strong>I Gede Gelgel Abdiutama</strong></small><br>
-        <small>Support: <strong>UPA TIK Undiksha</strong></small>
+    <p style="color:gray">
+        <small>Profil: <a href="https://www.linkedin.com/in/gedegelgel/"><strong>I Gede Gelgel Abdiutama</strong></a></small><br>
+        <small>Kontak: <a href="https://wa.me/6285739683673"><strong>WhatsApp</strong></a></small><br>
+        <small>Dukungan: <a href="https://upttik.undiksha.ac.id"><strong>UPA TIK Undiksha</strong></a></small>
     </p>
     """, unsafe_allow_html=True)
-    st.title("Tanya Ganesha Muda🎓")
+    st.title("🎓Tanya Ganesha Muda")
 
 
 def process_response(question):
@@ -146,14 +147,14 @@ def main():
         if not st.session_state.authenticated:
             placeholder = st.empty()
             with placeholder.container():
-                user_token = st.text_input("Masukkan token untuk dapat mengakses Virtual Assistant", type="password")
+                user_token = st.text_input("Masukkan token user oleh admin untuk dapat mengakses Virtual Assistant!", type="password")
                 if st.button("Submit"):
                     if verify_token(user_token) or user_token == STREAMLIT_KEY_ADMIN:
                         st.session_state.authenticated = True
-                        st.success("Token valid. Selamat datang!")
+                        st.success("Token user valid. Selamat datang!")
                         placeholder.empty()
                     else:
-                        st.error("Token salah, coba lagi!")
+                        st.error("Token user tidak valid. Silakan coba lagi!")
         if st.session_state.authenticated:
             display_example_questions()
             st.markdown("***")
