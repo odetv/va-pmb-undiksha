@@ -254,15 +254,8 @@ va-pmb-undiksha                         # Root directory project
 │     ├─ index.faiss
 │     └─ index.pkl
 ├─ test                                 # Unit test evaluation RAGAS
-│  ├─ calc
-│  │  ├─ calc_ragas_pmb.xlsx
-│  │  ├─ calc_ragas_pmb.pdf
-│  ├─ data
-│  │  ├─ qa.xlsx
-│  │  ├─ test_case.py
-│  ├─ result
-│  │  ├─ score_ragas_adaptive.xlsx
-│  └─ ragas_test.py
+│  ├─ ai
+│  └─ human
 ├─ utils                                # Tools reusable
 │  ├─ agent_state.py
 │  ├─ api_undiksha.py

@@ -1,7 +1,7 @@
 import sys
 import os
 import pandas as pd
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from datetime import datetime
 from data.test_case import questions, ground_truths
 from main import rag_adaptive
@@ -54,7 +54,7 @@ average_row['average'] = average_row[['context_precision', 'context_recall', 'fa
 df = pd.concat([df, average_row], ignore_index=True)
 
 timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-file_name = f"test/result/score_ragas_{timestamp}.xlsx"
+file_name = f"test/human/result/score_ragas_human_{timestamp}.xlsx"
 
 with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
     df.to_excel(writer, index=False, sheet_name='Evaluation')
