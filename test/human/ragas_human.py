@@ -2,63 +2,47 @@ import sys
 import os
 import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from datetime import datetime
 from data.test_case import questions, ground_truths
 from main import rag_adaptive
-from datasets import Dataset 
-from ragas import evaluate
-from ragas.metrics import (
-    faithfulness,
-    answer_relevancy,
-    context_recall,
-    context_precision,
-)
 
-answers = []
-contexts = []
 
-for question in questions:
-    context, answer = rag_adaptive(question)
-    contexts.append([ctx['answer'] for ctx in context])
-    answers.append(answer)
+def run_opsi1():
+    # Opsi 1 (Evaluasi dibedakan per agent yang ada):
+    # - General Agent (44 Test Case)
+    # - KTM Agent (2 Test Case)
+    # - Kelulusan Agent (2 Test Case)
+    # - Out of Context Agent (2 Test Case)
 
-data = {
-    "question": questions,
-    "contexts": contexts,
-    "answer": answers,
-    "ground_truth": ground_truths
-}
+    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir masing-masing agent
+    # - Jalankan fungsi tersebut
+    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
+    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil masing-masing agent setiap masing-masing metrik
+    return
 
-dataset = Dataset.from_dict(data)
-result = evaluate(
-    dataset = dataset, 
-    metrics=[
-        context_precision,
-        context_recall,
-        faithfulness,
-        answer_relevancy,
-    ],
-)
 
-df = result.to_pandas()
-df.columns = ["question", "contexts", "answer", "ground_truth", "context_precision", "context_recall", "faithfulness", "answer_relevancy"]
-df['average'] = df[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
-empty_row = pd.Series([None] * len(df.columns), index=df.columns)
-df = pd.concat([df, pd.DataFrame([empty_row])], ignore_index=True)
-average_row = df[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean().to_frame().T
-average_row['question'] = 'Average'
-average_row['contexts'] = ''
-average_row['answer'] = ''
-average_row['ground_truth'] = ''
-average_row['average'] = average_row[['context_precision', 'context_recall', 'faithfulness', 'answer_relevancy']].mean(axis=1)
-df = pd.concat([df, average_row], ignore_index=True)
+def run_opsi2():
+    # Opsi 2 (Evaluasi hanya pada agent yang menggunakan RAG):
+    # - General Agent (50 Test Case)
 
-timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-file_name = f"test/human/result/score_ragas_human_{timestamp}.xlsx"
+    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir general agent
+    # - Jalankan fungsi tersebut
+    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
+    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil general agent setiap masing-masing metrik
+    return
 
-with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
-    df.to_excel(writer, index=False, sheet_name='Evaluation')
-    workbook  = writer.book
-    worksheet = writer.sheets['Evaluation']
-    last_row = len(df)
-    worksheet.merge_range(f'A{last_row + 1}:D{last_row + 1}', 'Average', workbook.add_format({'align': 'auto'}))
+
+def run_opsi3():
+    # Opsi 3 (Evaluasi pada hasil kompilasi model multi-agent atau gabungan agent-agent oleh LangGraph):
+    # - Multi-Agent (50 Test Case)
+
+    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir multi-agent yaitu rag_adaptive pada langgraph
+    # - Jalankan fungsi tersebut
+    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
+    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil multi-agent setiap masing-masing metrik
+    return
+
+
+def main():
+    run_opsi1()
+    run_opsi2()
+    run_opsi3()
