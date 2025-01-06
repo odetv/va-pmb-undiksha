@@ -31,3 +31,7 @@ chunks = text_splitter.split_documents(documents)
 _, EMBEDDER = embedder()
 vectordb = FAISS.from_documents(chunks, EMBEDDER)
 vectordb.save_local(VECTORDB_DIR)
+
+
+# 4. Process Save Embeddings
+# python -m utils.raw_process
