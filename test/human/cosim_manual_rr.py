@@ -1,9 +1,16 @@
 import sys
 import os
 import pandas as pd
-from scipy.spatial.distance import cosine
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from utils.llm import embedder
+
+
+def cosine_similarity_manual(vec1, vec2):
+    dot_product = np.dot(vec1, vec2)
+    norma_vec1 = np.linalg.norm(vec1)
+    norma_vec2 = np.linalg.norm(vec2)
+    return dot_product / (norma_vec1 * norma_vec2)
 
 
 def get_cos_similarity_rr():
@@ -30,9 +37,9 @@ def get_cos_similarity_rr():
             p3_embedding = embeddings.embed_query(eg3[i])
 
             # Hitung cosine similarity
-            sim1 = 1 - cosine(question_embedding, p1_embedding)
-            sim2 = 1 - cosine(question_embedding, p2_embedding)
-            sim3 = 1 - cosine(question_embedding, p3_embedding)
+            sim1 = cosine_similarity_manual(p1_embedding, question_embedding)
+            sim2 = cosine_similarity_manual(p2_embedding, question_embedding)
+            sim3 = cosine_similarity_manual(p3_embedding, question_embedding)
 
             results.append([i + 1, sim1, sim2, sim3])
         except Exception as e:

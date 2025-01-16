@@ -28,4 +28,5 @@ python-multipart
 firebase-admin
 python-telegram-bot
 nest_asyncio
-scipy
+pandas
+numpy
