@@ -1,20 +1,13 @@
 import sys
 import os
 import pandas as pd
-import openai
-from dotenv import load_dotenv
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
 from scipy.spatial.distance import cosine
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-
-load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
+from utils.llm import embedder
 
 
 def get_cos_similarity_rr():
-    # Load data dari Excel
+    # Load data dari test case excel
     eo = pd.read_excel('test/human/calc/calc_testcase.xlsx', sheet_name='RR', usecols='B')['Question'].tolist()
     eg1 = pd.read_excel('test/human/calc/calc_testcase.xlsx', sheet_name='RR', usecols='F')['P1'].tolist()
     eg2 = pd.read_excel('test/human/calc/calc_testcase.xlsx', sheet_name='RR', usecols='G')['P2'].tolist()
@@ -23,8 +16,9 @@ def get_cos_similarity_rr():
     # Simpan hasil cosine similarity
     results = []
 
-    # Inisialisasi OpenAIEmbeddings
-    embeddings = OpenAIEmbeddings(api_key=openai_api_key, model="text-embedding-3-large")
+    # Inisialisasi embedding model
+    _, EMBEDDER = embedder()
+    embeddings = EMBEDDER
 
     # Loop melalui semua pertanyaan asli dan pertanyaan artifisial
     for i in range(len(eo)):
@@ -48,7 +42,7 @@ def get_cos_similarity_rr():
     # Buat DataFrame dari hasil
     df_results = pd.DataFrame(results, columns=['No Test Case', 'Eg1', 'Eg2', 'Eg3'])
 
-    # Simpan ke file Excel
+    # Simpan ke file excel
     df_results.to_excel('test/human/result/cos_similarity_rr.xlsx', index=False)
     print("Cosine similarity saved to 'test/human/result/cos_similarity_rr.xlsx'.")
 
