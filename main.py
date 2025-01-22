@@ -86,11 +86,12 @@ def rag_adaptive(question):
     graph = workflow.compile()
     result = graph.invoke({"question": question})
     answers = result.get("responseFinal", [])
-    contexts = result.get("answerAgents", "")
+    contexts = result.get("retrievedContext", [])
+    # contexts = result.get("answerAgents", "")
     get_graph_image(graph)
     return contexts, answers
 
 
 
 # DEBUG QUERY EXAMPLES
-# rag_adaptive("Siapa rektor undiksha? Saya ingin cetak ktm 1234567890. Saya ingin cek kelulusan nomor pendaftaran 1234567890 tanggal lahir 2001-01-31. Bagaimana cara sembahyang tepat waktu?")
+rag_adaptive("Apa jenis-jenis beasiswa bagi mahasiswa undiksha?")

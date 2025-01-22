@@ -11,12 +11,12 @@ def get_context_and_answer():
 
     for index, (question, ground_truth) in enumerate(zip(questions, ground_truths), start=1):
         contexts, answers = rag_adaptive(question)
-        context = [context['answer'] for context in contexts if 'answer' in context]
+        # context = [context['answer'] for context in contexts if 'answer' in context]
 
         results.append({
             'Question': question,
             'Ground Truth': ground_truth,
-            'Context': "".join(context),
+            'Context': contexts,
             'Answer': answers
         })
 
