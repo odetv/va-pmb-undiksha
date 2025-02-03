@@ -94,4 +94,4 @@ def rag_adaptive(question):
 
 
 # DEBUG QUERY EXAMPLES
-rag_adaptive("Apa jenis-jenis beasiswa bagi mahasiswa undiksha?")
+# rag_adaptive("Apa jenis-jenis beasiswa bagi mahasiswa undiksha?")
