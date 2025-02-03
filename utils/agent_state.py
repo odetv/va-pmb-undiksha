@@ -26,6 +26,7 @@ class AgentState(TypedDict):
     nimKTMMhs: str
     urlKTMMhs: str
     answerAgents : Annotated[Sequence[AnswerState], add]
+    retrievedContext : str
     responseFinal: str
     isHallucination: str
     hallucinationCount: int

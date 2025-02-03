@@ -2,47 +2,33 @@ import sys
 import os
 import pandas as pd
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from data.test_case import questions, ground_truths
 from main import rag_adaptive
 
+def get_context_and_answer():
+    questions = pd.read_excel('test/human/data/data_testcase.xlsx', sheet_name='QA', usecols='B')['Question'].tolist()
+    ground_truths = pd.read_excel('test/human/data/data_testcase.xlsx', sheet_name='QA', usecols='C')['Ground Truth'].tolist()
+    results = []
 
-def run_opsi1():
-    # Opsi 1 (Evaluasi dibedakan per agent yang ada):
-    # - General Agent (44 Test Case)
-    # - KTM Agent (2 Test Case)
-    # - Kelulusan Agent (2 Test Case)
-    # - Out of Context Agent (2 Test Case)
+    for index, (question, ground_truth) in enumerate(zip(questions, ground_truths), start=1):
+        contexts, answers = rag_adaptive(question)
+        # context = [context['answer'] for context in contexts if 'answer' in context]
 
-    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir masing-masing agent
-    # - Jalankan fungsi tersebut
-    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
-    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil masing-masing agent setiap masing-masing metrik
-    return
+        results.append({
+            'Question': question,
+            'Ground Truth': ground_truth,
+            'Context': contexts,
+            'Answer': answers
+        })
 
-
-def run_opsi2():
-    # Opsi 2 (Evaluasi hanya pada agent yang menggunakan RAG):
-    # - General Agent (50 Test Case)
-
-    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir general agent
-    # - Jalankan fungsi tersebut
-    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
-    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil general agent setiap masing-masing metrik
-    return
-
-
-def run_opsi3():
-    # Opsi 3 (Evaluasi pada hasil kompilasi model multi-agent atau gabungan agent-agent oleh LangGraph):
-    # - Multi-Agent (50 Test Case)
-
-    # - Buat fungsi untuk menangkap hasil context dan answer secara berulangan berdasarkan jumlah question pada endpoint terakhir multi-agent yaitu rag_adaptive pada langgraph
-    # - Jalankan fungsi tersebut
-    # - Simpan ke file excel dengan kolom question, ground truth, context, answer
-    # - Lakukan perhitungan RAGAS manual dengan excel dari hasil multi-agent setiap masing-masing metrik
-    return
+        print(f"Proses Test Case [{index}/{len(questions)}]")
+    
+    df_results = pd.DataFrame(results)
+    
+    df_results.to_excel('test/human/result/result_testcase.xlsx', index=False, sheet_name='DATA')
 
 
 def main():
-    run_opsi1()
-    run_opsi2()
-    run_opsi3()
+    get_context_and_answer()
+
+if __name__ == "__main__":
+    main()
